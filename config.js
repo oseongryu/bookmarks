@@ -1,8 +1,8 @@
 // Supabase Configuration
 // TODO: Replace with your actual Supabase project credentials
 const SUPABASE_CONFIG = {
-    url: 'YOUR_SUPABASE_URL', // 예: https://xxxxxxxxxxxxx.supabase.co
-    anonKey: 'YOUR_SUPABASE_ANON_KEY' // Supabase 프로젝트의 anon public key
+    url: 'https://iswwjhrmswcxbpctgzyj.supabase.co', // 예: https://xxxxxxxxxxxxx.supabase.co
+    anonKey: 'sb_publishable_m5c_aT_bw-HECc__kgkeqQ_V0-MOtLH' // Supabase 프로젝트의 anon public key
 };
 
 // Initialize Supabase client
