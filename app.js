@@ -7,6 +7,10 @@ const elements = {
     addUrlForm: document.getElementById('addUrlForm'),
     editUrlForm: document.getElementById('editUrlForm'),
 
+    // Toggle
+    toggleOptions: document.getElementById('toggleOptions'),
+    optionalFields: document.getElementById('optionalFields'),
+
     // URL List
     urlList: document.getElementById('urlList'),
     loadingSpinner: document.getElementById('loadingSpinner'),
@@ -14,13 +18,12 @@ const elements = {
     searchInput: document.getElementById('searchInput'),
     refreshBtn: document.getElementById('refreshBtn'),
 
-    // Modals
-    editModal: new bootstrap.Modal(document.getElementById('editModal')),
+    // Modal
+    editModal: document.getElementById('editModal'),
 
     // Toast
-    toast: new bootstrap.Toast(document.getElementById('toast')),
-    toastMessage: document.getElementById('toastMessage'),
-    toastElement: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    toastMessage: document.getElementById('toastMessage')
 };
 
 // ===== Initialization =====
@@ -28,6 +31,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadUrls();
     setupEventListeners();
 });
+
+// ===== Event Listeners =====
+function setupEventListeners() {
+    // Forms
+    elements.addUrlForm.addEventListener('submit', addUrl);
+    elements.editUrlForm.addEventListener('submit', updateUrl);
+
+    // Toggle optional fields
+    elements.toggleOptions.addEventListener('click', () => {
+        elements.toggleOptions.classList.toggle('active');
+        elements.optionalFields.classList.toggle('show');
+    });
+
+    // Search and refresh
+    elements.searchInput.addEventListener('input', searchUrls);
+    elements.refreshBtn.addEventListener('click', loadUrls);
+
+    // Modal close
+    document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
+        btn.addEventListener('click', hideEditModal);
+    });
+}
 
 // ===== URL CRUD Functions =====
 async function loadUrls() {
@@ -47,7 +72,7 @@ async function loadUrls() {
         renderUrls(allUrls);
     } catch (error) {
         console.error('Load URLs error:', error);
-        showToast('URL 목록을 불러오는 중 오류가 발생했습니다.', 'danger');
+        showToast('URL 목록을 불러오는 중 오류가 발생했습니다.', 'error');
     } finally {
         elements.loadingSpinner.classList.add('d-none');
     }
@@ -72,10 +97,15 @@ async function addUrl(e) {
 
         showToast('URL이 추가되었습니다!', 'success');
         elements.addUrlForm.reset();
+
+        // Hide optional fields after submit
+        elements.toggleOptions.classList.remove('active');
+        elements.optionalFields.classList.remove('show');
+
         await loadUrls();
     } catch (error) {
         console.error('Add URL error:', error);
-        showToast('URL 추가 중 오류가 발생했습니다.', 'danger');
+        showToast('URL 추가 중 오류가 발생했습니다.', 'error');
     }
 }
 
@@ -94,7 +124,7 @@ async function deleteUrl(id) {
         await loadUrls();
     } catch (error) {
         console.error('Delete URL error:', error);
-        showToast('URL 삭제 중 오류가 발생했습니다.', 'danger');
+        showToast('URL 삭제 중 오류가 발생했습니다.', 'error');
     }
 }
 
@@ -105,7 +135,11 @@ function showEditModal(url) {
     document.getElementById('editUrlAddress').value = url.url;
     document.getElementById('editUrlDescription').value = url.description || '';
 
-    elements.editModal.show();
+    elements.editModal.classList.add('show');
+}
+
+function hideEditModal() {
+    elements.editModal.classList.remove('show');
 }
 
 async function updateUrl(e) {
@@ -128,11 +162,11 @@ async function updateUrl(e) {
         if (error) throw error;
 
         showToast('URL이 수정되었습니다!', 'success');
-        elements.editModal.hide();
+        hideEditModal();
         await loadUrls();
     } catch (error) {
         console.error('Update URL error:', error);
-        showToast('URL 수정 중 오류가 발생했습니다.', 'danger');
+        showToast('URL 수정 중 오류가 발생했습니다.', 'error');
     }
 }
 
@@ -149,23 +183,22 @@ function renderUrls(urls) {
     elements.urlList.innerHTML = urls.map(url => `
         <div class="url-item">
             <div class="url-item-header">
-                <div>
+                <div class="url-item-content">
                     ${url.category ? `<span class="url-item-category">${escapeHtml(url.category)}</span>` : ''}
                     <div class="url-item-title">
-                        <i class="bi bi-bookmark-fill text-primary"></i>
+                        <i class="bi bi-bookmark-fill"></i>
                         ${escapeHtml(url.title)}
                     </div>
                     <a href="${escapeHtml(url.url)}" target="_blank" class="url-item-link">
-                        <i class="bi bi-box-arrow-up-right"></i>
                         ${escapeHtml(url.url)}
                     </a>
                     ${url.description ? `<div class="url-item-description">${escapeHtml(url.description)}</div>` : ''}
                 </div>
                 <div class="url-item-actions">
-                    <button class="btn btn-outline-primary btn-icon" onclick="showEditModal(${JSON.stringify(url).replace(/"/g, '&quot;')})" title="수정">
+                    <button class="btn-icon edit" onclick="showEditModal(${JSON.stringify(url).replace(/"/g, '&quot;')})" title="수정">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-outline-danger btn-icon" onclick="deleteUrl('${url.id}')" title="삭제">
+                    <button class="btn-icon delete" onclick="deleteUrl('${url.id}')" title="삭제">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -193,21 +226,14 @@ function searchUrls() {
 }
 
 // ===== UI Functions =====
-function showToast(message, type = 'primary') {
+function showToast(message, type = 'success') {
     elements.toastMessage.textContent = message;
-    elements.toastElement.className = `toast align-items-center border-0 bg-${type}`;
-    elements.toast.show();
-}
+    elements.toast.className = `toast ${type}`;
+    elements.toast.classList.add('show');
 
-// ===== Event Listeners =====
-function setupEventListeners() {
-    // Forms
-    elements.addUrlForm.addEventListener('submit', addUrl);
-    elements.editUrlForm.addEventListener('submit', updateUrl);
-
-    // Search and refresh
-    elements.searchInput.addEventListener('input', searchUrls);
-    elements.refreshBtn.addEventListener('click', loadUrls);
+    setTimeout(() => {
+        elements.toast.classList.remove('show');
+    }, 3000);
 }
 
 // ===== Utility Functions =====
