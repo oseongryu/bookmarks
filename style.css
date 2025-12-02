@@ -50,6 +50,13 @@ body {
     z-index: 100;
 }
 
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
 .app-title {
     font-size: 20px;
     font-weight: 700;
@@ -62,6 +69,44 @@ body {
 
 .app-title i {
     font-size: 24px;
+}
+
+.btn-edit-toggle {
+    width: 56px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 3px;
+    transition: all 0.3s ease;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.btn-edit-toggle::before {
+    content: '';
+    width: 26px;
+    height: 26px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-edit-toggle:active::before {
+    width: 30px;
+}
+
+.btn-edit-toggle.active {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.btn-edit-toggle.active::before {
+    transform: translateX(24px);
+    background: var(--primary);
 }
 
 /* ===== Main Content ===== */
@@ -157,7 +202,7 @@ textarea.form-input {
 }
 
 .optional-fields.show {
-    max-height: 300px;
+    max-height: 400px;
 }
 
 /* ===== Add Button ===== */
@@ -366,9 +411,20 @@ textarea.form-input {
     color: var(--primary);
 }
 
+.btn-icon.copy {
+    border-color: var(--success);
+    color: var(--success);
+}
+
 .btn-icon.delete {
     border-color: var(--danger);
     color: var(--danger);
+}
+
+/* Hide edit/delete buttons when edit mode is inactive */
+body:not(.edit-mode) .btn-icon.edit,
+body:not(.edit-mode) .btn-icon.delete {
+    display: none;
 }
 
 /* ===== Empty State ===== */

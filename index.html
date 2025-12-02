@@ -20,10 +20,13 @@
     <!-- Header -->
     <header class="app-header">
         <div class="container">
-            <h1 class="app-title">
-                <i class="bi bi-link-45deg"></i>
-                URL Manager
-            </h1>
+            <div class="header-content">
+                <h1 class="app-title">
+                    <i class="bi bi-link-45deg"></i>
+                    URL Manager
+                </h1>
+                <button class="btn-edit-toggle" id="editModeToggle" title="편집 모드"></button>
+            </div>
         </div>
     </header>
 
@@ -33,11 +36,6 @@
             <!-- Quick Add Form -->
             <div class="quick-add-card">
                 <form id="addUrlForm">
-                    <div class="form-group">
-                        <input type="text" class="form-input" id="urlTitle" placeholder="제목 (예: Google)" required
-                            autocomplete="off">
-                    </div>
-
                     <div class="form-group">
                         <input type="url" class="form-input" id="urlAddress" placeholder="https://example.com" required
                             autocomplete="off">
@@ -50,6 +48,11 @@
                     </button>
 
                     <div class="optional-fields" id="optionalFields">
+                        <div class="form-group">
+                            <input type="text" class="form-input" id="urlTitle" placeholder="제목 (선택)"
+                                autocomplete="off">
+                        </div>
+
                         <div class="form-group">
                             <input type="text" class="form-input" id="urlCategory" placeholder="카테고리 (선택)"
                                 autocomplete="off">
@@ -111,7 +114,7 @@
 
                     <div class="form-group">
                         <label class="form-label">제목</label>
-                        <input type="text" class="form-input" id="editUrlTitle" required>
+                        <input type="text" class="form-input" id="editUrlTitle">
                     </div>
 
                     <div class="form-group">

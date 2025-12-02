@@ -10,6 +10,7 @@ const elements = {
     // Toggle
     toggleOptions: document.getElementById('toggleOptions'),
     optionalFields: document.getElementById('optionalFields'),
+    editModeToggle: document.getElementById('editModeToggle'),
 
     // URL List
     urlList: document.getElementById('urlList'),
@@ -42,6 +43,12 @@ function setupEventListeners() {
     elements.toggleOptions.addEventListener('click', () => {
         elements.toggleOptions.classList.toggle('active');
         elements.optionalFields.classList.toggle('show');
+    });
+
+    // Toggle edit mode
+    elements.editModeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('edit-mode');
+        elements.editModeToggle.classList.toggle('active');
     });
 
     // Search and refresh
@@ -81,9 +88,12 @@ async function loadUrls() {
 async function addUrl(e) {
     e.preventDefault();
 
+    const title = document.getElementById('urlTitle').value.trim();
+    const url = document.getElementById('urlAddress').value.trim();
+
     const urlData = {
-        title: document.getElementById('urlTitle').value.trim(),
-        url: document.getElementById('urlAddress').value.trim(),
+        title: title || url, // Use URL as title if title is empty
+        url: url,
         category: document.getElementById('urlCategory').value.trim() || null,
         description: document.getElementById('urlDescription').value.trim() || null
     };
@@ -146,9 +156,12 @@ async function updateUrl(e) {
     e.preventDefault();
 
     const id = document.getElementById('editUrlId').value;
+    const title = document.getElementById('editUrlTitle').value.trim();
+    const url = document.getElementById('editUrlAddress').value.trim();
+
     const urlData = {
-        title: document.getElementById('editUrlTitle').value.trim(),
-        url: document.getElementById('editUrlAddress').value.trim(),
+        title: title || url, // Use URL as title if title is empty
+        url: url,
         category: document.getElementById('editUrlCategory').value.trim() || null,
         description: document.getElementById('editUrlDescription').value.trim() || null
     };
@@ -195,6 +208,9 @@ function renderUrls(urls) {
                     ${url.description ? `<div class="url-item-description">${escapeHtml(url.description)}</div>` : ''}
                 </div>
                 <div class="url-item-actions">
+                    <button class="btn-icon copy" onclick="copyUrl('${escapeHtml(url.url)}')" title="복사">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
                     <button class="btn-icon edit" onclick="showEditModal(${JSON.stringify(url).replace(/"/g, '&quot;')})" title="수정">
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -225,6 +241,29 @@ function searchUrls() {
     renderUrls(filtered);
 }
 
+async function copyUrl(url) {
+    try {
+        await navigator.clipboard.writeText(url);
+        showToast('URL이 복사되었습니다!', 'success');
+    } catch (error) {
+        console.error('Copy error:', error);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast('URL이 복사되었습니다!', 'success');
+        } catch (err) {
+            showToast('복사에 실패했습니다.', 'error');
+        }
+        document.body.removeChild(textArea);
+    }
+}
+
 // ===== UI Functions =====
 function showToast(message, type = 'success') {
     elements.toastMessage.textContent = message;
@@ -251,3 +290,4 @@ function escapeHtml(text) {
 // Make functions globally available for onclick handlers
 window.deleteUrl = deleteUrl;
 window.showEditModal = showEditModal;
+window.copyUrl = copyUrl;
