@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Manager - 간편한 URL 관리 서비스</title>
     <meta name="description" content="Supabase 기반의 간편한 URL 북마크 관리 서비스">
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -15,6 +16,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-primary sticky-top">
@@ -23,83 +25,11 @@
                 <i class="bi bi-link-45deg"></i>
                 URL Manager
             </a>
-            <div class="ms-auto" id="navbarContent">
-                <div id="authButtons" class="d-flex gap-2">
-                    <button class="btn btn-outline-light" id="loginBtn">
-                        <i class="bi bi-box-arrow-in-right"></i> 로그인
-                    </button>
-                    <button class="btn btn-light" id="signupBtn">
-                        <i class="bi bi-person-plus"></i> 회원가입
-                    </button>
-                </div>
-                <div id="userInfo" class="d-none align-items-center gap-3">
-                    <span class="text-white">
-                        <i class="bi bi-person-circle"></i>
-                        <span id="userEmail"></span>
-                    </span>
-                    <button class="btn btn-outline-light btn-sm" id="logoutBtn">
-                        <i class="bi bi-box-arrow-right"></i> 로그아웃
-                    </button>
-                </div>
-            </div>
         </div>
     </nav>
 
-    <!-- Hero Section (shown when not logged in) -->
-    <section id="heroSection" class="hero-section">
-        <div class="container text-center">
-            <div class="hero-content">
-                <h1 class="display-3 fw-bold mb-4 animate-fade-in">
-                    URL을 스마트하게 관리하세요
-                </h1>
-                <p class="lead mb-5 text-muted animate-fade-in-delay">
-                    간편한 북마크 관리로 중요한 링크를 한 곳에서 체계적으로 정리하세요
-                </p>
-                <div class="d-flex gap-3 justify-content-center animate-fade-in-delay-2">
-                    <button class="btn btn-primary btn-lg px-5" id="heroSignupBtn">
-                        <i class="bi bi-rocket-takeoff"></i> 시작하기
-                    </button>
-                    <button class="btn btn-outline-primary btn-lg px-5" id="heroLoginBtn">
-                        <i class="bi bi-box-arrow-in-right"></i> 로그인
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Feature Cards -->
-            <div class="row mt-5 g-4">
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-                        <h3>안전한 저장</h3>
-                        <p>Supabase 기반의 안전한 클라우드 저장소</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="bi bi-lightning-charge"></i>
-                        </div>
-                        <h3>빠른 접근</h3>
-                        <p>언제 어디서나 빠르게 URL에 접근</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="bi bi-folder-check"></i>
-                        </div>
-                        <h3>체계적 관리</h3>
-                        <p>카테고리별로 깔끔하게 정리</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main App Section (shown when logged in) -->
-    <section id="appSection" class="d-none py-5">
+    <!-- Main App Section -->
+    <section id="appSection" class="py-5">
         <div class="container">
             <!-- Add URL Form -->
             <div class="card shadow-sm mb-4 border-0 card-hover">
@@ -112,23 +42,23 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="urlTitle" class="form-label fw-semibold">제목</label>
-                                <input type="text" class="form-control form-control-lg" id="urlTitle" 
-                                       placeholder="예: Google 검색" required>
+                                <input type="text" class="form-control form-control-lg" id="urlTitle"
+                                    placeholder="예: Google 검색" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="urlCategory" class="form-label fw-semibold">카테고리</label>
-                                <input type="text" class="form-control form-control-lg" id="urlCategory" 
-                                       placeholder="예: 검색엔진">
+                                <input type="text" class="form-control form-control-lg" id="urlCategory"
+                                    placeholder="예: 검색엔진">
                             </div>
                             <div class="col-12">
                                 <label for="urlAddress" class="form-label fw-semibold">URL</label>
-                                <input type="url" class="form-control form-control-lg" id="urlAddress" 
-                                       placeholder="https://example.com" required>
+                                <input type="url" class="form-control form-control-lg" id="urlAddress"
+                                    placeholder="https://example.com" required>
                             </div>
                             <div class="col-12">
                                 <label for="urlDescription" class="form-label fw-semibold">설명 (선택)</label>
-                                <textarea class="form-control" id="urlDescription" rows="2" 
-                                          placeholder="URL에 대한 간단한 설명"></textarea>
+                                <textarea class="form-control" id="urlDescription" rows="2"
+                                    placeholder="URL에 대한 간단한 설명"></textarea>
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary btn-lg px-5">
@@ -149,24 +79,24 @@
                             내 URL 목록
                         </h2>
                         <div class="d-flex gap-2">
-                            <input type="text" class="form-control" id="searchInput" 
-                                   placeholder="검색..." style="width: 250px;">
+                            <input type="text" class="form-control" id="searchInput" placeholder="검색..."
+                                style="width: 250px;">
                             <button class="btn btn-outline-secondary" id="refreshBtn">
                                 <i class="bi bi-arrow-clockwise"></i>
                             </button>
                         </div>
                     </div>
-                    
+
                     <div id="loadingSpinner" class="text-center py-5 d-none">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
-                    
+
                     <div id="urlList" class="url-list">
                         <!-- URLs will be dynamically loaded here -->
                     </div>
-                    
+
                     <div id="emptyState" class="text-center py-5 d-none">
                         <i class="bi bi-inbox display-1 text-muted"></i>
                         <p class="text-muted mt-3">아직 저장된 URL이 없습니다.</p>
@@ -176,39 +106,6 @@
         </div>
     </section>
 
-    <!-- Auth Modal -->
-    <div class="modal fade" id="authModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="authModalTitle">로그인</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="authForm">
-                        <div class="mb-3">
-                            <label for="authEmail" class="form-label fw-semibold">이메일</label>
-                            <input type="email" class="form-control form-control-lg" id="authEmail" 
-                                   placeholder="your@email.com" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="authPassword" class="form-label fw-semibold">비밀번호</label>
-                            <input type="password" class="form-control form-control-lg" id="authPassword" 
-                                   placeholder="••••••••" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="authSubmitBtn">
-                            로그인
-                        </button>
-                        <div class="text-center">
-                            <a href="#" class="text-decoration-none" id="authToggle">
-                                계정이 없으신가요? <strong>회원가입</strong>
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Edit URL Modal -->
     <div class="modal fade" id="editModal" tabindex="-1">
@@ -264,4 +161,5 @@
     <script src="config.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>

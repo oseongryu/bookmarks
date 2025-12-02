@@ -1,7 +1,6 @@
--- URLs 테이블 생성
+-- URLs 테이블 생성 (로그인 없이 사용)
 CREATE TABLE urls (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     title TEXT NOT NULL,
     url TEXT NOT NULL,
     category TEXT,
@@ -11,31 +10,30 @@ CREATE TABLE urls (
 );
 
 -- 인덱스 생성 (성능 향상)
-CREATE INDEX urls_user_id_idx ON urls(user_id);
 CREATE INDEX urls_created_at_idx ON urls(created_at DESC);
 
 -- RLS (Row Level Security) 활성화
 ALTER TABLE urls ENABLE ROW LEVEL SECURITY;
 
--- RLS 정책 생성 - 사용자는 자신의 URL만 조회 가능
-CREATE POLICY "Users can view their own URLs"
+-- RLS 정책 생성 - 모든 사용자가 URL 조회 가능
+CREATE POLICY "Anyone can view URLs"
     ON urls FOR SELECT
-    USING (auth.uid() = user_id);
+    USING (true);
 
--- RLS 정책 생성 - 사용자는 자신의 URL만 추가 가능
-CREATE POLICY "Users can insert their own URLs"
+-- RLS 정책 생성 - 모든 사용자가 URL 추가 가능
+CREATE POLICY "Anyone can insert URLs"
     ON urls FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (true);
 
--- RLS 정책 생성 - 사용자는 자신의 URL만 수정 가능
-CREATE POLICY "Users can update their own URLs"
+-- RLS 정책 생성 - 모든 사용자가 URL 수정 가능
+CREATE POLICY "Anyone can update URLs"
     ON urls FOR UPDATE
-    USING (auth.uid() = user_id);
+    USING (true);
 
--- RLS 정책 생성 - 사용자는 자신의 URL만 삭제 가능
-CREATE POLICY "Users can delete their own URLs"
+-- RLS 정책 생성 - 모든 사용자가 URL 삭제 가능
+CREATE POLICY "Anyone can delete URLs"
     ON urls FOR DELETE
-    USING (auth.uid() = user_id);
+    USING (true);
 
 -- updated_at 자동 업데이트 트리거 함수
 CREATE OR REPLACE FUNCTION update_updated_at_column()
