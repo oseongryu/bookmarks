@@ -25,7 +25,12 @@
                     <i class="bi bi-link-45deg"></i>
                     URL Manager
                 </h1>
-                <button class="btn-edit-toggle" id="editModeToggle" title="편집 모드"></button>
+                <div class="header-actions">
+                    <button class="btn-edit-toggle" id="editModeToggle" title="편집 모드"></button>
+                    <button class="btn-logout" id="logoutBtn" title="로그아웃">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -134,6 +139,29 @@
 
                     <button type="submit" class="btn-save">
                         <i class="bi bi-check-lg"></i> 저장
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal show" id="loginModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 로그인</h3>
+            </div>
+            <div class="modal-body">
+                <p class="login-description">원하는 액세스 키를 입력하세요. 각 키마다 별도의 URL 목록이 생성됩니다.</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">액세스 키</label>
+                        <input type="text" class="form-input" id="loginKey" placeholder="예: mykey123" required
+                            autocomplete="off">
+                    </div>
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-key"></i> 로그인
                     </button>
                 </form>
             </div>

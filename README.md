@@ -1,14 +1,16 @@
 # URL Manager 📎
 
-Supabase 기반의 간편한 URL 북마크 관리 서비스입니다.
+간편한 URL 북마크 관리 서비스입니다.
 
 ## ✨ 주요 기능
 
-- 🔐 **사용자 인증** - Supabase Auth를 사용한 안전한 로그인/회원가입
-- 📝 **URL 관리** - 계정별로 URL 추가, 수정, 삭제
-- 🏷️ **카테고리 분류** - 카테고리별로 URL 정리
+- 🔐 **간단한 인증** - 액세스 키 기반 로그인
+- 📝 **빠른 URL 등록** - URL만 입력하면 자동으로 제목 생성
+- 📋 **원클릭 복사** - URL을 클립보드에 빠르게 복사
+- 🏷️ **선택적 정보** - 제목, 카테고리, 설명은 선택사항
+- ✏️ **편집 모드** - 토글 스위치로 수정/삭제 버튼 표시/숨김
 - 🔍 **실시간 검색** - 제목, URL, 카테고리, 설명으로 검색
-- 🎨 **모던한 UI** - Bootstrap 5 기반의 프리미엄 디자인
+- 🎨 **모던한 UI** - 깔끔하고 직관적인 디자인
 - 📱 **반응형 디자인** - 모바일, 태블릿, 데스크톱 지원
 
 ## 🚀 빠른 시작
@@ -23,72 +25,15 @@ Supabase 기반의 간편한 URL 북마크 관리 서비스입니다.
 
 ### 2. 데이터베이스 테이블 생성
 
-Supabase 대시보드의 **SQL Editor**에서 다음 SQL을 실행합니다:
+#### 새로 설치하는 경우:
+Supabase 대시보드의 **SQL Editor**에서 `schema.sql` 파일의 내용을 실행합니다.
 
-```sql
--- URLs 테이블 생성
-CREATE TABLE urls (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    title TEXT NOT NULL,
-    url TEXT NOT NULL,
-    category TEXT,
-    description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### 기존 데이터가 있는 경우 (마이그레이션):
+Supabase 대시보드의 **SQL Editor**에서 `migration.sql` 파일의 내용을 실행합니다.
+- 기존 모든 URL은 `default` 액세스 키로 마이그레이션됩니다
+- `default` 키로 로그인하면 기존 데이터를 볼 수 있습니다
 
--- 인덱스 생성 (성능 향상)
-CREATE INDEX urls_user_id_idx ON urls(user_id);
-CREATE INDEX urls_created_at_idx ON urls(created_at DESC);
-
--- RLS (Row Level Security) 활성화
-ALTER TABLE urls ENABLE ROW LEVEL SECURITY;
-
--- RLS 정책 생성 - 사용자는 자신의 URL만 조회 가능
-CREATE POLICY "Users can view their own URLs"
-    ON urls FOR SELECT
-    USING (auth.uid() = user_id);
-
--- RLS 정책 생성 - 사용자는 자신의 URL만 추가 가능
-CREATE POLICY "Users can insert their own URLs"
-    ON urls FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
-
--- RLS 정책 생성 - 사용자는 자신의 URL만 수정 가능
-CREATE POLICY "Users can update their own URLs"
-    ON urls FOR UPDATE
-    USING (auth.uid() = user_id);
-
--- RLS 정책 생성 - 사용자는 자신의 URL만 삭제 가능
-CREATE POLICY "Users can delete their own URLs"
-    ON urls FOR DELETE
-    USING (auth.uid() = user_id);
-
--- updated_at 자동 업데이트 트리거 함수
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- updated_at 트리거 생성
-CREATE TRIGGER update_urls_updated_at
-    BEFORE UPDATE ON urls
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-```
-
-### 3. 이메일 인증 설정 (선택사항)
-
-개발 중에는 이메일 확인을 비활성화할 수 있습니다:
-
-1. Supabase 대시보드에서 **Authentication** > **Settings**로 이동
-2. **Email Auth** 섹션에서 "Enable email confirmations" 체크 해제
-
-### 4. 설정 파일 수정
+### 3. 설정 파일 수정
 
 `config.js` 파일을 열고 Supabase 정보를 입력합니다:
 
@@ -99,7 +44,7 @@ const SUPABASE_CONFIG = {
 };
 ```
 
-### 5. 웹사이트 실행
+### 4. 웹사이트 실행
 
 정적 웹사이트이므로 간단한 HTTP 서버로 실행할 수 있습니다:
 
@@ -123,6 +68,20 @@ npx serve
 
 브라우저에서 `http://localhost:8000` (또는 해당 포트)로 접속합니다.
 
+## 🔑 액세스 키 시스템
+
+이 앱은 **멀티 키 시스템**을 사용합니다:
+
+- 각 사용자는 원하는 액세스 키를 입력하여 로그인합니다
+- 각 액세스 키마다 **별도의 URL 목록**이 생성됩니다
+- 같은 키로 로그인하면 동일한 URL 목록을 볼 수 있습니다
+- 다른 키로 로그인하면 완전히 다른 URL 목록이 표시됩니다
+
+**예시:**
+- `mykey123`로 로그인 → A 사용자의 URL 목록
+- `anotherkey`로 로그인 → B 사용자의 URL 목록
+- 각 키는 독립적인 데이터 공간을 가집니다
+
 ## 📁 프로젝트 구조
 
 ```
@@ -131,27 +90,38 @@ url-manager/
 ├── style.css       # 스타일시트
 ├── app.js          # 애플리케이션 로직
 ├── config.js       # Supabase 설정
+├── schema.sql      # 데이터베이스 스키마 (새 설치용)
+├── migration.sql   # 데이터베이스 마이그레이션 (기존 데이터용)
 └── README.md       # 프로젝트 문서
 ```
 
 ## 🎯 사용 방법
 
-1. **회원가입/로그인**
-   - 우측 상단의 "회원가입" 또는 "로그인" 버튼 클릭
-   - 이메일과 비밀번호 입력
+1. **로그인**
+   - 원하는 액세스 키를 입력하여 로그인
+   - 처음 사용하는 키라면 새로운 데이터 공간이 생성됩니다
+   - 이전에 사용한 키라면 저장된 URL 목록을 볼 수 있습니다
+   - 로그인 정보는 브라우저에 저장됩니다
 
 2. **URL 추가**
-   - 로그인 후 상단 폼에서 URL 정보 입력
-   - 제목, URL은 필수, 카테고리와 설명은 선택사항
-   - "URL 추가" 버튼 클릭
+   - URL 입력란에 URL만 입력하고 추가 (제목은 자동 생성)
+   - 또는 "추가 옵션"을 열어 제목, 카테고리, 설명 입력
 
-3. **URL 관리**
-   - 목록에서 각 URL의 수정/삭제 버튼 사용
-   - URL 클릭 시 새 탭에서 열림
+3. **URL 복사**
+   - 각 URL 항목의 초록색 복사 버튼 클릭
+   - URL이 클립보드에 복사됨
 
-4. **검색**
-   - 우측 상단 검색창에서 실시간 검색
+4. **URL 수정/삭제**
+   - 헤더의 편집 모드 토글 스위치 활성화
+   - 수정/삭제 버튼이 나타남
+   - 수정 또는 삭제 진행
+
+5. **검색**
+   - 검색창에서 실시간 검색
    - 제목, URL, 카테고리, 설명 모두 검색 가능
+
+6. **로그아웃**
+   - 헤더의 로그아웃 버튼 클릭
 
 ## 🎨 기술 스택
 

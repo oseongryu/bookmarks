@@ -1,11 +1,16 @@
 // ===== Global State =====
 let allUrls = [];
+let currentAccessKey = null; // 현재 로그인한 사용자의 액세스 키
+
+// ===== Authentication =====
+const AUTH_STORAGE_KEY = 'url_manager_auth';
 
 // ===== DOM Elements =====
 const elements = {
     // Forms
     addUrlForm: document.getElementById('addUrlForm'),
     editUrlForm: document.getElementById('editUrlForm'),
+    loginForm: document.getElementById('loginForm'),
 
     // Toggle
     toggleOptions: document.getElementById('toggleOptions'),
@@ -21,6 +26,10 @@ const elements = {
 
     // Modal
     editModal: document.getElementById('editModal'),
+    loginModal: document.getElementById('loginModal'),
+
+    // Buttons
+    logoutBtn: document.getElementById('logoutBtn'),
 
     // Toast
     toast: document.getElementById('toast'),
@@ -29,8 +38,13 @@ const elements = {
 
 // ===== Initialization =====
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadUrls();
-    setupEventListeners();
+    if (checkAuth()) {
+        await loadUrls();
+        setupEventListeners();
+    } else {
+        showLoginModal();
+        setupEventListeners();
+    }
 });
 
 // ===== Event Listeners =====
@@ -38,6 +52,10 @@ function setupEventListeners() {
     // Forms
     elements.addUrlForm.addEventListener('submit', addUrl);
     elements.editUrlForm.addEventListener('submit', updateUrl);
+    elements.loginForm.addEventListener('submit', handleLogin);
+
+    // Logout
+    elements.logoutBtn.addEventListener('click', handleLogout);
 
     // Toggle optional fields
     elements.toggleOptions.addEventListener('click', () => {
@@ -63,6 +81,11 @@ function setupEventListeners() {
 
 // ===== URL CRUD Functions =====
 async function loadUrls() {
+    if (!currentAccessKey) {
+        console.log('No access key available');
+        return;
+    }
+
     try {
         elements.loadingSpinner.classList.remove('d-none');
         elements.urlList.innerHTML = '';
@@ -71,6 +94,7 @@ async function loadUrls() {
         const { data, error } = await supabase
             .from('urls')
             .select('*')
+            .eq('access_key', currentAccessKey)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -92,6 +116,7 @@ async function addUrl(e) {
     const url = document.getElementById('urlAddress').value.trim();
 
     const urlData = {
+        access_key: currentAccessKey,
         title: title || url, // Use URL as title if title is empty
         url: url,
         category: document.getElementById('urlCategory').value.trim() || null,
@@ -285,6 +310,54 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// ===== Authentication Functions =====
+function checkAuth() {
+    const authKey = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (authKey) {
+        currentAccessKey = authKey;
+        return true;
+    }
+    return false;
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+    const inputKey = document.getElementById('loginKey').value.trim();
+
+    if (inputKey) {
+        // 모든 키를 유효한 것으로 간주 (각 키마다 별도의 데이터 공간)
+        currentAccessKey = inputKey;
+        localStorage.setItem(AUTH_STORAGE_KEY, inputKey);
+        hideLoginModal();
+        showToast('로그인 성공!', 'success');
+        loadUrls();
+        document.getElementById('loginKey').value = '';
+    } else {
+        showToast('액세스 키를 입력해주세요.', 'error');
+    }
+}
+
+function handleLogout() {
+    if (confirm('로그아웃 하시겠습니까?')) {
+        currentAccessKey = null;
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        showLoginModal();
+        showToast('로그아웃 되었습니다.', 'success');
+        // Clear URL list
+        allUrls = [];
+        elements.urlList.innerHTML = '';
+        elements.emptyState.classList.add('d-none');
+    }
+}
+
+function showLoginModal() {
+    elements.loginModal.classList.add('show');
+}
+
+function hideLoginModal() {
+    elements.loginModal.classList.remove('show');
 }
 
 // Make functions globally available for onclick handlers

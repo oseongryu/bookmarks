@@ -57,6 +57,12 @@ body {
     gap: 12px;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .app-title {
     font-size: 20px;
     font-weight: 700;
@@ -69,6 +75,29 @@ body {
 
 .app-title i {
     font-size: 24px;
+}
+
+.btn-logout {
+    width: 40px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 18px;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-logout:active {
+    transform: scale(0.95);
 }
 
 .btn-edit-toggle {
@@ -497,6 +526,11 @@ body:not(.edit-mode) .btn-icon.delete {
     }
 }
 
+/* Login modal cannot be dismissed by clicking overlay */
+#loginModal .modal-overlay {
+    pointer-events: none;
+}
+
 .modal-header {
     padding: 20px;
     border-bottom: 1px solid var(--border);
@@ -552,6 +586,14 @@ body:not(.edit-mode) .btn-icon.delete {
 
 .btn-save:active {
     transform: scale(0.98);
+}
+
+.login-description {
+    color: var(--text-light);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    text-align: center;
 }
 
 /* ===== Toast ===== */
