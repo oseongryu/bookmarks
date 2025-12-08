@@ -175,15 +175,29 @@ async function addUrl(e) {
     const title = document.getElementById('urlTitle').value.trim();
     const url = document.getElementById('urlAddress').value.trim();
 
-    const urlData = {
-        access_key: currentAccessKey,
-        title: title || url, // Use URL as title if title is empty
-        url: url,
-        category: document.getElementById('urlCategory').value.trim() || null,
-        description: document.getElementById('urlDescription').value.trim() || null
-    };
-
     try {
+        let finalTitle = title;
+
+        // If title is empty, use timestamp as index
+        if (!title) {
+            const now = new Date();
+            // Format: YYYYMMDD_HHmmss (e.g., 20251209_083701)
+            finalTitle = now.getFullYear() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') + '_' +
+                String(now.getHours()).padStart(2, '0') +
+                String(now.getMinutes()).padStart(2, '0') +
+                String(now.getSeconds()).padStart(2, '0');
+        }
+
+        const urlData = {
+            access_key: currentAccessKey,
+            title: finalTitle,
+            url: url,
+            category: document.getElementById('urlCategory').value.trim() || null,
+            description: document.getElementById('urlDescription').value.trim() || null
+        };
+
         const { error } = await supabase
             .from('urls')
             .insert([urlData]);
