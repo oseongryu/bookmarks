@@ -76,6 +76,21 @@
                 </form>
             </div>
 
+            <!-- Pagination Controls -->
+            <div class="pagination-controls">
+                <label for="itemsPerPage" class="pagination-label">
+                    <i class="bi bi-list-ul"></i>
+                    페이지당 항목 수:
+                </label>
+                <select id="itemsPerPage" class="pagination-select">
+                    <option value="5" selected>5개</option>
+                    <option value="10">10개</option>
+                    <option value="20">20개</option>
+                    <option value="50">50개</option>
+                    <option value="100">100개</option>
+                </select>
+            </div>
+
             <!-- Search Bar -->
             <div class="search-bar">
                 <i class="bi bi-search search-icon"></i>
@@ -93,6 +108,17 @@
             <!-- URL List -->
             <div id="urlList" class="url-list">
                 <!-- URLs will be dynamically loaded here -->
+            </div>
+
+            <!-- Pagination Navigation -->
+            <div id="paginationNav" class="pagination-nav d-none">
+                <button class="btn-page" id="prevPage" title="이전 페이지">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="page-info" id="pageInfo">1 / 1</span>
+                <button class="btn-page" id="nextPage" title="다음 페이지">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
 
             <!-- Empty State -->

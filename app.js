@@ -1,6 +1,9 @@
 // ===== Global State =====
 let allUrls = [];
 let currentAccessKey = null; // 현재 로그인한 사용자의 액세스 키
+let currentPage = 1;
+let itemsPerPage = 5;
+let filteredUrls = []; // 검색 필터링된 URL 목록
 
 // ===== Authentication =====
 const AUTH_STORAGE_KEY = 'url_manager_auth';
@@ -23,6 +26,13 @@ const elements = {
     emptyState: document.getElementById('emptyState'),
     searchInput: document.getElementById('searchInput'),
     refreshBtn: document.getElementById('refreshBtn'),
+
+    // Pagination
+    itemsPerPageSelect: document.getElementById('itemsPerPage'),
+    paginationNav: document.getElementById('paginationNav'),
+    prevPageBtn: document.getElementById('prevPage'),
+    nextPageBtn: document.getElementById('nextPage'),
+    pageInfo: document.getElementById('pageInfo'),
 
     // Modal
     editModal: document.getElementById('editModal'),
@@ -73,6 +83,28 @@ function setupEventListeners() {
     elements.searchInput.addEventListener('input', searchUrls);
     elements.refreshBtn.addEventListener('click', loadUrls);
 
+    // Pagination
+    elements.itemsPerPageSelect.addEventListener('change', (e) => {
+        itemsPerPage = parseInt(e.target.value);
+        currentPage = 1;
+        renderCurrentPage();
+    });
+
+    elements.prevPageBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderCurrentPage();
+        }
+    });
+
+    elements.nextPageBtn.addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredUrls.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderCurrentPage();
+        }
+    });
+
     // Modal close
     document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
         btn.addEventListener('click', hideEditModal);
@@ -100,7 +132,9 @@ async function loadUrls() {
         if (error) throw error;
 
         allUrls = data || [];
-        renderUrls(allUrls);
+        filteredUrls = [...allUrls];
+        currentPage = 1;
+        renderCurrentPage();
     } catch (error) {
         console.error('Load URLs error:', error);
         showToast('URL 목록을 불러오는 중 오류가 발생했습니다.', 'error');
@@ -210,14 +244,6 @@ async function updateUrl(e) {
 
 // ===== Render Functions =====
 function renderUrls(urls) {
-    if (urls.length === 0) {
-        elements.emptyState.classList.remove('d-none');
-        elements.urlList.innerHTML = '';
-        return;
-    }
-
-    elements.emptyState.classList.add('d-none');
-
     elements.urlList.innerHTML = urls.map(url => `
         <div class="url-item">
             <div class="url-item-header">
@@ -248,22 +274,85 @@ function renderUrls(urls) {
     `).join('');
 }
 
+// ===== Pagination Functions =====
+function renderCurrentPage() {
+    // Handle empty filtered results
+    if (filteredUrls.length === 0) {
+        elements.emptyState.classList.remove('d-none');
+        elements.urlList.innerHTML = '';
+        elements.paginationNav.classList.add('d-none');
+        return;
+    }
+
+    elements.emptyState.classList.add('d-none');
+
+    const totalPages = Math.ceil(filteredUrls.length / itemsPerPage);
+
+    // Ensure current page is within valid range
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+
+    // Calculate start and end indices
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    // Get current page items
+    const currentPageUrls = filteredUrls.slice(startIndex, endIndex);
+
+    // Render URLs
+    renderUrls(currentPageUrls);
+
+    // Update pagination UI
+    updatePaginationUI(totalPages);
+}
+
+function updatePaginationUI(totalPages) {
+    if (filteredUrls.length === 0 || totalPages <= 1) {
+        elements.paginationNav.classList.add('d-none');
+        return;
+    }
+
+    elements.paginationNav.classList.remove('d-none');
+    elements.pageInfo.textContent = `${currentPage} / ${totalPages}`;
+
+    // Update button states
+    elements.prevPageBtn.disabled = currentPage === 1;
+    elements.nextPageBtn.disabled = currentPage === totalPages;
+
+    // Add/remove disabled class for styling
+    if (currentPage === 1) {
+        elements.prevPageBtn.classList.add('disabled');
+    } else {
+        elements.prevPageBtn.classList.remove('disabled');
+    }
+
+    if (currentPage === totalPages) {
+        elements.nextPageBtn.classList.add('disabled');
+    } else {
+        elements.nextPageBtn.classList.remove('disabled');
+    }
+}
+
 function searchUrls() {
     const query = elements.searchInput.value.toLowerCase().trim();
 
     if (!query) {
-        renderUrls(allUrls);
-        return;
+        filteredUrls = [...allUrls];
+    } else {
+        filteredUrls = allUrls.filter(url =>
+            url.title.toLowerCase().includes(query) ||
+            url.url.toLowerCase().includes(query) ||
+            (url.category && url.category.toLowerCase().includes(query)) ||
+            (url.description && url.description.toLowerCase().includes(query))
+        );
     }
 
-    const filtered = allUrls.filter(url =>
-        url.title.toLowerCase().includes(query) ||
-        url.url.toLowerCase().includes(query) ||
-        (url.category && url.category.toLowerCase().includes(query)) ||
-        (url.description && url.description.toLowerCase().includes(query))
-    );
-
-    renderUrls(filtered);
+    currentPage = 1;
+    renderCurrentPage();
 }
 
 async function copyUrl(url) {
