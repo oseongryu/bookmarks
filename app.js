@@ -1,9 +1,9 @@
 // ===== Global State =====
-let allUrls = [];
 let currentAccessKey = null; // 현재 로그인한 사용자의 액세스 키
 let currentPage = 1;
 let itemsPerPage = 5;
-let filteredUrls = []; // 검색 필터링된 URL 목록
+let totalCount = 0; // 전체 URL 개수
+let searchQuery = ''; // 현재 검색어
 
 // ===== Authentication =====
 const AUTH_STORAGE_KEY = 'url_manager_auth';
@@ -87,21 +87,21 @@ function setupEventListeners() {
     elements.itemsPerPageSelect.addEventListener('change', (e) => {
         itemsPerPage = parseInt(e.target.value);
         currentPage = 1;
-        renderCurrentPage();
+        fetchUrls();
     });
 
     elements.prevPageBtn.addEventListener('click', () => {
         if (currentPage > 1) {
             currentPage--;
-            renderCurrentPage();
+            fetchUrls();
         }
     });
 
     elements.nextPageBtn.addEventListener('click', () => {
-        const totalPages = Math.ceil(filteredUrls.length / itemsPerPage);
+        const totalPages = Math.ceil(totalCount / itemsPerPage);
         if (currentPage < totalPages) {
             currentPage++;
-            renderCurrentPage();
+            fetchUrls();
         }
     });
 
@@ -118,23 +118,49 @@ async function loadUrls() {
         return;
     }
 
+    currentPage = 1;
+    searchQuery = '';
+    elements.searchInput.value = '';
+    await fetchUrls();
+}
+
+async function fetchUrls() {
+    if (!currentAccessKey) {
+        console.log('No access key available');
+        return;
+    }
+
     try {
         elements.loadingSpinner.classList.remove('d-none');
         elements.urlList.innerHTML = '';
         elements.emptyState.classList.add('d-none');
 
-        const { data, error } = await supabase
+        // Calculate range for pagination
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage - 1;
+
+        // Build query (excluding category and description)
+        let query = supabase
             .from('urls')
-            .select('*')
+            .select('id, title, url, created_at', { count: 'exact' })
             .eq('access_key', currentAccessKey)
             .order('created_at', { ascending: false });
 
+        // Apply search filter if exists (only search url)
+        if (searchQuery) {
+            query = query.ilike('url', `%${searchQuery}%`);
+        }
+
+        // Apply pagination
+        query = query.range(startIndex, endIndex);
+
+        const { data, error, count } = await query;
+
         if (error) throw error;
 
-        allUrls = data || [];
-        filteredUrls = [...allUrls];
-        currentPage = 1;
-        renderCurrentPage();
+        totalCount = count || 0;
+        renderUrls(data || []);
+        updatePaginationUI();
     } catch (error) {
         console.error('Load URLs error:', error);
         showToast('URL 목록을 불러오는 중 오류가 발생했습니다.', 'error');
@@ -248,7 +274,6 @@ function renderUrls(urls) {
         <div class="url-item">
             <div class="url-item-header">
                 <div class="url-item-content">
-                    ${url.category ? `<span class="url-item-category">${escapeHtml(url.category)}</span>` : ''}
                     <div class="url-item-title">
                         <i class="bi bi-bookmark-fill"></i>
                         ${escapeHtml(url.title)}
@@ -256,7 +281,6 @@ function renderUrls(urls) {
                     <a href="${escapeHtml(url.url)}" target="_blank" class="url-item-link">
                         ${escapeHtml(url.url)}
                     </a>
-                    ${url.description ? `<div class="url-item-description">${escapeHtml(url.description)}</div>` : ''}
                 </div>
                 <div class="url-item-actions">
                     <button class="btn-icon copy" onclick="copyUrl('${escapeHtml(url.url)}')" title="복사">
@@ -275,9 +299,11 @@ function renderUrls(urls) {
 }
 
 // ===== Pagination Functions =====
-function renderCurrentPage() {
-    // Handle empty filtered results
-    if (filteredUrls.length === 0) {
+function updatePaginationUI() {
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    // Handle empty results
+    if (totalCount === 0) {
         elements.emptyState.classList.remove('d-none');
         elements.urlList.innerHTML = '';
         elements.paginationNav.classList.add('d-none');
@@ -286,32 +312,8 @@ function renderCurrentPage() {
 
     elements.emptyState.classList.add('d-none');
 
-    const totalPages = Math.ceil(filteredUrls.length / itemsPerPage);
-
-    // Ensure current page is within valid range
-    if (currentPage > totalPages) {
-        currentPage = totalPages;
-    }
-    if (currentPage < 1) {
-        currentPage = 1;
-    }
-
-    // Calculate start and end indices
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-
-    // Get current page items
-    const currentPageUrls = filteredUrls.slice(startIndex, endIndex);
-
-    // Render URLs
-    renderUrls(currentPageUrls);
-
-    // Update pagination UI
-    updatePaginationUI(totalPages);
-}
-
-function updatePaginationUI(totalPages) {
-    if (filteredUrls.length === 0 || totalPages <= 1) {
+    // Hide pagination if only one page
+    if (totalPages <= 1) {
         elements.paginationNav.classList.add('d-none');
         return;
     }
@@ -338,21 +340,10 @@ function updatePaginationUI(totalPages) {
 }
 
 function searchUrls() {
-    const query = elements.searchInput.value.toLowerCase().trim();
-
-    if (!query) {
-        filteredUrls = [...allUrls];
-    } else {
-        filteredUrls = allUrls.filter(url =>
-            url.title.toLowerCase().includes(query) ||
-            url.url.toLowerCase().includes(query) ||
-            (url.category && url.category.toLowerCase().includes(query)) ||
-            (url.description && url.description.toLowerCase().includes(query))
-        );
-    }
-
+    const query = elements.searchInput.value.trim();
+    searchQuery = query;
     currentPage = 1;
-    renderCurrentPage();
+    fetchUrls();
 }
 
 async function copyUrl(url) {
@@ -434,10 +425,13 @@ function handleLogout() {
         localStorage.removeItem(AUTH_STORAGE_KEY);
         showLoginModal();
         showToast('로그아웃 되었습니다.', 'success');
-        // Clear URL list
-        allUrls = [];
+        // Clear state
+        totalCount = 0;
+        currentPage = 1;
+        searchQuery = '';
         elements.urlList.innerHTML = '';
         elements.emptyState.classList.add('d-none');
+        elements.paginationNav.classList.add('d-none');
     }
 }
 
