@@ -277,8 +277,62 @@ body {
     color: var(--primary);
 }
 
+/* ===== Auto Title Toggle ===== */
+.auto-title-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-label input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    transition: all 0.3s;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-label input[type="checkbox"]:checked+.toggle-slider {
+    background: var(--primary);
+}
+
+.toggle-label input[type="checkbox"]:checked+.toggle-slider::before {
+    left: 20px;
+}
+
+.toggle-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+
 .tools-dropdown-item i {
-    font-size: 16px;
+    font-size: 18px;
 }
 
 .tools-dropdown-item:active {

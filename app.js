@@ -87,6 +87,9 @@ const elements = {
     toolsMenuBtn: document.getElementById('toolsMenuBtn'),
     toolsDropdown: document.getElementById('toolsDropdown'),
 
+    // Auto Fetch Title Toggle
+    autoFetchTitleToggle: document.getElementById('autoFetchTitleToggle'),
+
     // Toast
     toast: document.getElementById('toast'),
     toastMessage: document.getElementById('toastMessage')
@@ -94,6 +97,12 @@ const elements = {
 
 // ===== Initialization =====
 document.addEventListener('DOMContentLoaded', async () => {
+    // Restore auto fetch title toggle state
+    const autoFetchTitle = localStorage.getItem('autoFetchTitle');
+    if (autoFetchTitle !== null) {
+        elements.autoFetchTitleToggle.checked = autoFetchTitle === 'true';
+    }
+
     if (checkAuth()) {
         updateAccessKeyDisplay();
         await loadUrls();
@@ -160,6 +169,11 @@ function setupEventListeners() {
     elements.editModeToggle.addEventListener('click', () => {
         document.body.classList.toggle('edit-mode');
         elements.editModeToggle.classList.toggle('active');
+    });
+
+    // Auto fetch title toggle
+    elements.autoFetchTitleToggle.addEventListener('change', (e) => {
+        localStorage.setItem('autoFetchTitle', e.target.checked);
     });
 
     // Search and refresh
@@ -289,10 +303,9 @@ async function addUrl(e) {
     try {
         let finalTitle = title;
 
-        // If title is empty, use timestamp as index
+        // If title is empty, use timestamp as temporary title
         if (!title) {
             const now = new Date();
-            // Format: YYYYMMDD_HHmmss (e.g., 20251209_083701)
             finalTitle = now.getFullYear() +
                 String(now.getMonth() + 1).padStart(2, '0') +
                 String(now.getDate()).padStart(2, '0') + '_' +
@@ -309,9 +322,10 @@ async function addUrl(e) {
             description: document.getElementById('urlDescription').value.trim() || null
         };
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('urls')
-            .insert([urlData]);
+            .insert([urlData])
+            .select();
 
         if (error) throw error;
 
@@ -323,9 +337,37 @@ async function addUrl(e) {
         elements.optionalFields.classList.remove('show');
 
         await loadUrls();
+
+        // If title was empty and auto-fetch is enabled, fetch it in the background and update
+        if (!title && data && data[0] && elements.autoFetchTitleToggle.checked) {
+            fetchAndUpdateTitle(data[0].id, url);
+        }
     } catch (error) {
         console.error('Add URL error:', error);
         showToast('URL 추가 중 오류가 발생했습니다.', 'error');
+    }
+}
+
+// Fetch title in background and update
+async function fetchAndUpdateTitle(id, url) {
+    try {
+        const fetchedTitle = await fetchTitleForUrl(url);
+
+        // Only update if it's not a timestamp (meaning we got a real title)
+        if (!/^\d{8}_\d{6}$/.test(fetchedTitle)) {
+            const { error } = await supabase
+                .from('urls')
+                .update({ title: fetchedTitle })
+                .eq('id', id);
+
+            if (!error) {
+                // Refresh the list to show updated title
+                await fetchUrls();
+            }
+        }
+    } catch (error) {
+        console.log('Background title fetch failed:', error);
+        // Silently fail - user already has the URL saved
     }
 }
 
@@ -503,6 +545,60 @@ function showToast(message, type = 'success') {
     setTimeout(() => {
         elements.toast.classList.remove('show');
     }, 3000);
+}
+
+// ===== Fetch Page Title Helper =====
+async function fetchTitleForUrl(url) {
+    // List of CORS proxies to try
+    const proxies = [
+        (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+        (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    ];
+
+    for (const proxyFn of proxies) {
+        try {
+            const proxyUrl = proxyFn(url);
+            const response = await fetch(proxyUrl, {
+                method: 'GET',
+                timeout: 5000
+            });
+
+            if (!response.ok) continue;
+
+            let html;
+            const contentType = response.headers.get('content-type');
+
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                html = data.contents || data;
+            } else {
+                html = await response.text();
+            }
+
+            if (html) {
+                // Parse HTML to extract title
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const title = doc.querySelector('title');
+
+                if (title && title.textContent.trim()) {
+                    return title.textContent.trim();
+                }
+            }
+        } catch (error) {
+            console.log('Proxy failed, trying next...', error);
+            continue;
+        }
+    }
+
+    // Fallback: use timestamp as index
+    const now = new Date();
+    return now.getFullYear() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') + '_' +
+        String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0') +
+        String(now.getSeconds()).padStart(2, '0');
 }
 
 // ===== Utility Functions =====
