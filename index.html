@@ -26,28 +26,46 @@
                         <i class="bi bi-link-45deg"></i>
                         URL Manager
                     </h1>
-                    <div class="access-key-display" id="accessKeyDisplay">
-                        <i class="bi bi-key-fill"></i>
-                        <span id="accessKeyText">-</span>
-                    </div>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-import" id="importBtn" title="북마크 가져오기">
-                        <i class="bi bi-upload"></i>
-                    </button>
-                    <button class="btn-export" id="exportBtn" title="북마크 내보내기">
-                        <i class="bi bi-download"></i>
-                    </button>
-                    <button class="btn-bulk-delete" id="bulkDeleteBtn" title="일괄 삭제">
-                        <i class="bi bi-trash3"></i>
-                    </button>
-                    <button class="btn-duplicate" id="duplicateBtn" title="중복 제거">
-                        <i class="bi bi-funnel"></i>
-                    </button>
+                    <div class="tools-menu-container">
+                        <button class="btn-tools-menu" id="toolsMenuBtn" title="도구">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <div class="tools-dropdown" id="toolsDropdown">
+                            <button class="tools-dropdown-item" id="importBtn">
+                                <i class="bi bi-upload"></i>
+                                <span>북마크 가져오기</span>
+                            </button>
+                            <button class="tools-dropdown-item" id="exportBtn">
+                                <i class="bi bi-download"></i>
+                                <span>북마크 내보내기</span>
+                            </button>
+                            <div class="tools-dropdown-divider"></div>
+                            <button class="tools-dropdown-item" id="bulkDeleteBtn">
+                                <i class="bi bi-trash3"></i>
+                                <span>일괄 삭제</span>
+                            </button>
+                            <button class="tools-dropdown-item" id="duplicateBtn">
+                                <i class="bi bi-funnel"></i>
+                                <span>중복 제거</span>
+                            </button>
+                        </div>
+                    </div>
                     <button class="btn-edit-toggle" id="editModeToggle" title="편집 모드"></button>
-                    <button class="btn-logout" id="logoutBtn" title="로그아웃">
-                        <i class="bi bi-box-arrow-right"></i>
-                    </button>
+                    <div class="user-menu-container">
+                        <button class="btn-user-menu" id="userMenuBtn" title="사용자 메뉴">
+                            <i class="bi bi-person-circle"></i>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-dropdown-key" id="dropdownAccessKey">-</div>
+                            <div class="user-dropdown-divider"></div>
+                            <button class="user-dropdown-item" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>로그아웃</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -95,21 +113,6 @@
                 </form>
             </div>
 
-            <!-- Pagination Controls -->
-            <div class="pagination-controls">
-                <label for="itemsPerPage" class="pagination-label">
-                    <i class="bi bi-list-ul"></i>
-                    페이지당 항목 수:
-                </label>
-                <select id="itemsPerPage" class="pagination-select">
-                    <option value="5" selected>5개</option>
-                    <option value="10">10개</option>
-                    <option value="20">20개</option>
-                    <option value="50">50개</option>
-                    <option value="100">100개</option>
-                </select>
-            </div>
-
             <!-- Search Bar -->
             <div class="search-bar">
                 <i class="bi bi-search search-icon"></i>
@@ -136,6 +139,17 @@
                 <label class="filter-checkbox">
                     <input type="checkbox" id="searchDescription">
                     <span>설명</span>
+                </label>
+                <div class="filter-divider"></div>
+                <label class="filter-select-label">
+                    <i class="bi bi-list-ul"></i>
+                    <select id="itemsPerPage" class="filter-select">
+                        <option value="5" selected>5개</option>
+                        <option value="10">10개</option>
+                        <option value="20">20개</option>
+                        <option value="50">50개</option>
+                        <option value="100">100개</option>
+                    </select>
                 </label>
             </div>
 

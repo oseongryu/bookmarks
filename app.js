@@ -78,9 +78,14 @@ const elements = {
     selectedCount: document.getElementById('selectedCount'),
     deleteBulkBtn: document.getElementById('deleteBulkBtn'),
 
-    // Access Key Display
-    accessKeyDisplay: document.getElementById('accessKeyDisplay'),
-    accessKeyText: document.getElementById('accessKeyText'),
+    // User Menu
+    userMenuBtn: document.getElementById('userMenuBtn'),
+    userDropdown: document.getElementById('userDropdown'),
+    dropdownAccessKey: document.getElementById('dropdownAccessKey'),
+
+    // Tools Menu
+    toolsMenuBtn: document.getElementById('toolsMenuBtn'),
+    toolsDropdown: document.getElementById('toolsDropdown'),
 
     // Toast
     toast: document.getElementById('toast'),
@@ -94,7 +99,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadUrls();
         setupEventListeners();
     } else {
-        hideAccessKeyDisplay();
         showLoginModal();
         setupEventListeners();
     }
@@ -107,12 +111,40 @@ function setupEventListeners() {
     elements.editUrlForm.addEventListener('submit', updateUrl);
     elements.loginForm.addEventListener('submit', handleLogin);
 
+    // User Menu
+    elements.userMenuBtn.addEventListener('click', toggleUserMenu);
+
+    // Tools Menu
+    elements.toolsMenuBtn.addEventListener('click', toggleToolsMenu);
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!elements.userMenuBtn.contains(e.target) && !elements.userDropdown.contains(e.target)) {
+            closeUserMenu();
+        }
+        if (!elements.toolsMenuBtn.contains(e.target) && !elements.toolsDropdown.contains(e.target)) {
+            closeToolsMenu();
+        }
+    });
+
     // Logout, Duplicate, Import, Export, Bulk Delete
     elements.logoutBtn.addEventListener('click', handleLogout);
-    elements.duplicateBtn.addEventListener('click', showDuplicateModal);
-    elements.importBtn.addEventListener('click', showImportModal);
-    elements.exportBtn.addEventListener('click', exportBookmarks);
-    elements.bulkDeleteBtn.addEventListener('click', showBulkDeleteModal);
+    elements.duplicateBtn.addEventListener('click', () => {
+        closeToolsMenu();
+        showDuplicateModal();
+    });
+    elements.importBtn.addEventListener('click', () => {
+        closeToolsMenu();
+        showImportModal();
+    });
+    elements.exportBtn.addEventListener('click', () => {
+        closeToolsMenu();
+        exportBookmarks();
+    });
+    elements.bulkDeleteBtn.addEventListener('click', () => {
+        closeToolsMenu();
+        showBulkDeleteModal();
+    });
     elements.importForm.addEventListener('submit', importBookmarks);
     elements.selectAllBtn.addEventListener('click', selectAllBulkItems);
     elements.deselectAllBtn.addEventListener('click', deselectAllBulkItems);
@@ -517,7 +549,7 @@ function handleLogout() {
     if (confirm('로그아웃 하시겠습니까?')) {
         currentAccessKey = null;
         localStorage.removeItem(AUTH_STORAGE_KEY);
-        hideAccessKeyDisplay();
+        closeUserMenu();
         showLoginModal();
         showToast('로그아웃 되었습니다.', 'success');
         // Clear state
@@ -538,20 +570,42 @@ function hideLoginModal() {
     elements.loginModal.classList.remove('show');
 }
 
-// ===== Access Key Display =====
+// ===== User Menu Functions =====
+function toggleUserMenu(e) {
+    e.stopPropagation();
+    // Close tools menu if open
+    closeToolsMenu();
+    elements.userDropdown.classList.toggle('show');
+    elements.userMenuBtn.classList.toggle('active');
+}
+
+function closeUserMenu() {
+    elements.userDropdown.classList.remove('show');
+    elements.userMenuBtn.classList.remove('active');
+}
+
 function updateAccessKeyDisplay() {
     if (currentAccessKey) {
-        elements.accessKeyText.textContent = currentAccessKey;
-        elements.accessKeyDisplay.style.display = 'flex';
+        elements.dropdownAccessKey.textContent = currentAccessKey;
     } else {
-        hideAccessKeyDisplay();
+        elements.dropdownAccessKey.textContent = '-';
     }
 }
 
-function hideAccessKeyDisplay() {
-    elements.accessKeyDisplay.style.display = 'none';
-    elements.accessKeyText.textContent = '-';
+// ===== Tools Menu Functions =====
+function toggleToolsMenu(e) {
+    e.stopPropagation();
+    // Close user menu if open
+    closeUserMenu();
+    elements.toolsDropdown.classList.toggle('show');
+    elements.toolsMenuBtn.classList.toggle('active');
 }
+
+function closeToolsMenu() {
+    elements.toolsDropdown.classList.remove('show');
+    elements.toolsMenuBtn.classList.remove('active');
+}
+
 
 // ===== Duplicate Detection and Removal =====
 function normalizeUrl(url) {
