@@ -929,25 +929,47 @@ function parseBookmarkHTML(html) {
         const url = link.getAttribute('href');
         const title = link.textContent.trim();
 
-        // Skip empty URLs or non-http(s) URLs
-        if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+        // Skip empty URLs
+        if (!url) {
             return;
         }
 
-        // Try to find category from parent DT/DL structure
-        let category = null;
+        // Accept http://, https://, and chrome:// URLs
+        const isValidUrl = url.startsWith('http://') ||
+            url.startsWith('https://') ||
+            url.startsWith('chrome://');
+
+        if (!isValidUrl) {
+            return;
+        }
+
+        // Build category path from all parent H3 elements
+        const categoryPath = [];
         let parent = link.parentElement;
+
+        // Traverse up the DOM tree to collect all category levels
         while (parent && parent.tagName !== 'BODY') {
             if (parent.tagName === 'DL') {
-                // Look for previous H3 sibling
+                // Check if this DL has a parent DT with H3
+                const parentDT = parent.parentElement;
+                if (parentDT && parentDT.tagName === 'DT') {
+                    const h3 = parentDT.querySelector(':scope > h3');
+                    if (h3) {
+                        // Add to the beginning to maintain hierarchy
+                        categoryPath.unshift(h3.textContent.trim());
+                    }
+                }
+                // Also check previous sibling (alternative structure)
                 const prevSibling = parent.previousElementSibling;
                 if (prevSibling && prevSibling.tagName === 'H3') {
-                    category = prevSibling.textContent.trim();
-                    break;
+                    categoryPath.unshift(prevSibling.textContent.trim());
                 }
             }
             parent = parent.parentElement;
         }
+
+        // Join category path with '/' separator
+        const category = categoryPath.length > 0 ? categoryPath.join('/') : null;
 
         bookmarks.push({
             url: url,
@@ -1007,16 +1029,39 @@ async function exportBookmarks() {
 }
 
 function generateBookmarkHTML(urls) {
-    // Group by category
-    const grouped = {};
+    // Build a tree structure from categories
+    const tree = {};
     const uncategorized = [];
 
     urls.forEach(url => {
         if (url.category) {
-            if (!grouped[url.category]) {
-                grouped[url.category] = [];
+            // Split category path by '/'
+            const parts = url.category.split('/').map(p => p.trim()).filter(p => p);
+
+            // Navigate/create tree structure
+            let current = tree;
+            parts.forEach(part => {
+                if (!current[part]) {
+                    current[part] = { _folders: {}, _bookmarks: [] };
+                }
+                current = current[part]._folders;
+            });
+
+            // Add bookmark to the deepest level
+            const lastPart = parts[parts.length - 1];
+            if (!tree[parts[0]]) {
+                tree[parts[0]] = { _folders: {}, _bookmarks: [] };
             }
-            grouped[url.category].push(url);
+
+            // Navigate to correct position
+            current = tree;
+            for (let i = 0; i < parts.length - 1; i++) {
+                current = current[parts[i]]._folders;
+            }
+            if (!current[lastPart]) {
+                current[lastPart] = { _folders: {}, _bookmarks: [] };
+            }
+            current[lastPart]._bookmarks.push(url);
         } else {
             uncategorized.push(url);
         }
@@ -1040,26 +1085,49 @@ function generateBookmarkHTML(urls) {
     html += `<DL><p>
 `;
 
-    // Add categorized bookmarks
-    Object.keys(grouped).sort().forEach(category => {
-        html += `    <DT><H3>${escapeHtml(category)}</H3>
+    // Recursive function to generate nested structure
+    function generateFolder(folderTree, indent = '    ') {
+        let result = '';
+        const folders = Object.keys(folderTree).sort();
+
+        folders.forEach(folderName => {
+            const folder = folderTree[folderName];
+
+            // Add folder header
+            result += `${indent}<DT><H3>${escapeHtml(folderName)}</H3></DT>
 `;
-        html += `    <DL><p>
+            result += `${indent}<DL><p>
 `;
-        grouped[category].forEach(url => {
-            const timestamp = Math.floor(new Date(url.created_at).getTime() / 1000);
-            html += `        <DT><A HREF="${escapeHtml(url.url)}" ADD_DATE="${timestamp}">${escapeHtml(url.title)}</A>
+
+            // Add bookmarks in this folder
+            if (folder._bookmarks && folder._bookmarks.length > 0) {
+                folder._bookmarks.forEach(url => {
+                    const timestamp = Math.floor(new Date(url.created_at).getTime() / 1000);
+                    result += `${indent}    <DT><A HREF="${escapeHtml(url.url)}" ADD_DATE="${timestamp}">${escapeHtml(url.title)}</A></DT>
+`;
+                });
+            }
+
+            // Recursively add subfolders
+            if (folder._folders && Object.keys(folder._folders).length > 0) {
+                result += generateFolder(folder._folders, indent + '    ');
+            }
+
+            result += `${indent}</DL><p>
 `;
         });
-        html += `    </DL><p>
-`;
-    });
+
+        return result;
+    }
+
+    // Add categorized bookmarks
+    html += generateFolder(tree);
 
     // Add uncategorized bookmarks
     if (uncategorized.length > 0) {
         uncategorized.forEach(url => {
             const timestamp = Math.floor(new Date(url.created_at).getTime() / 1000);
-            html += `    <DT><A HREF="${escapeHtml(url.url)}" ADD_DATE="${timestamp}">${escapeHtml(url.title)}</A>
+            html += `    <DT><A HREF="${escapeHtml(url.url)}" ADD_DATE="${timestamp}">${escapeHtml(url.title)}</A></DT>
 `;
         });
     }
