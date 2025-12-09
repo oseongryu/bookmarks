@@ -43,9 +43,17 @@ const elements = {
     // Modal
     editModal: document.getElementById('editModal'),
     loginModal: document.getElementById('loginModal'),
+    duplicateModal: document.getElementById('duplicateModal'),
 
     // Buttons
     logoutBtn: document.getElementById('logoutBtn'),
+    duplicateBtn: document.getElementById('duplicateBtn'),
+
+    // Duplicate Modal Elements
+    duplicateLoading: document.getElementById('duplicateLoading'),
+    duplicateContent: document.getElementById('duplicateContent'),
+    duplicateList: document.getElementById('duplicateList'),
+    noDuplicates: document.getElementById('noDuplicates'),
 
     // Toast
     toast: document.getElementById('toast'),
@@ -70,8 +78,9 @@ function setupEventListeners() {
     elements.editUrlForm.addEventListener('submit', updateUrl);
     elements.loginForm.addEventListener('submit', handleLogin);
 
-    // Logout
+    // Logout and Duplicate
     elements.logoutBtn.addEventListener('click', handleLogout);
+    elements.duplicateBtn.addEventListener('click', showDuplicateModal);
 
     // Toggle optional fields
     elements.toggleOptions.addEventListener('click', () => {
@@ -120,6 +129,10 @@ function setupEventListeners() {
     // Modal close
     document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
         btn.addEventListener('click', hideEditModal);
+    });
+
+    document.querySelectorAll('[data-dismiss="duplicate-modal"]').forEach(btn => {
+        btn.addEventListener('click', hideDuplicateModal);
     });
 }
 
@@ -479,7 +492,204 @@ function hideLoginModal() {
     elements.loginModal.classList.remove('show');
 }
 
+// ===== Duplicate Detection and Removal =====
+function normalizeUrl(url) {
+    try {
+        const original = url;
+
+        // Parse URL and normalize
+        let normalized = url.trim().toLowerCase();
+
+        // Remove query parameters and hash first
+        normalized = normalized.split('?')[0].split('#')[0];
+
+        // Remove www. prefix
+        normalized = normalized.replace(/^(https?:\/\/)www\./, '$1');
+
+        // Remove trailing slashes
+        while (normalized.endsWith('/')) {
+            normalized = normalized.slice(0, -1);
+        }
+
+        console.log('URL Normalization:', original, '->', normalized);
+        return normalized;
+    } catch (error) {
+        console.error('Normalization error:', error);
+        return url.trim().toLowerCase();
+    }
+}
+
+async function showDuplicateModal() {
+    elements.duplicateModal.classList.add('show');
+    elements.duplicateLoading.classList.remove('d-none');
+    elements.duplicateContent.classList.add('d-none');
+
+    await findDuplicates();
+}
+
+function hideDuplicateModal() {
+    elements.duplicateModal.classList.remove('show');
+}
+
+async function findDuplicates() {
+    try {
+        // Fetch all URLs for current access key
+        const { data, error } = await supabase
+            .from('urls')
+            .select('*')
+            .eq('access_key', currentAccessKey)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Group URLs by normalized URL
+        const urlGroups = new Map();
+
+        data.forEach(item => {
+            const normalized = normalizeUrl(item.url);
+            if (!urlGroups.has(normalized)) {
+                urlGroups.set(normalized, []);
+            }
+            urlGroups.get(normalized).push(item);
+        });
+
+        // Filter groups with duplicates (more than 1 item)
+        const duplicateGroups = Array.from(urlGroups.values())
+            .filter(group => group.length > 1);
+
+        // Show results
+        elements.duplicateLoading.classList.add('d-none');
+        elements.duplicateContent.classList.remove('d-none');
+
+        if (duplicateGroups.length === 0) {
+            elements.duplicateList.innerHTML = '';
+            elements.noDuplicates.classList.remove('d-none');
+        } else {
+            elements.noDuplicates.classList.add('d-none');
+            renderDuplicateGroups(duplicateGroups);
+        }
+    } catch (error) {
+        console.error('Find duplicates error:', error);
+        showToast('중복 검색 중 오류가 발생했습니다.', 'error');
+        hideDuplicateModal();
+    }
+}
+
+function renderDuplicateGroups(groups) {
+    elements.duplicateList.innerHTML = groups.map((group, groupIndex) => {
+        const normalizedUrl = normalizeUrl(group[0].url);
+        return `
+            <div class="duplicate-group" data-group-index="${groupIndex}">
+                <div class="duplicate-group-header">
+                    <div class="duplicate-group-title">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        중복 그룹 ${groupIndex + 1}
+                    </div>
+                    <span class="duplicate-count">${group.length}개</span>
+                </div>
+                
+                <div class="duplicate-items">
+                    ${group.map((item, itemIndex) => `
+                        <div class="duplicate-item" data-item-id="${item.id}">
+                            <div class="duplicate-item-checkbox">
+                                <input 
+                                    type="checkbox" 
+                                    id="dup-${groupIndex}-${itemIndex}"
+                                    data-group="${groupIndex}"
+                                    data-id="${item.id}"
+                                    onchange="toggleDuplicateItem(this)"
+                                >
+                            </div>
+                            <label for="dup-${groupIndex}-${itemIndex}" class="duplicate-item-info">
+                                <div class="duplicate-item-title">${escapeHtml(item.title)}</div>
+                                <div class="duplicate-item-url">${escapeHtml(item.url)}</div>
+                                <div class="duplicate-item-meta">
+                                    등록: ${new Date(item.created_at).toLocaleString('ko-KR')}
+                                    ${item.category ? ` • 카테고리: ${escapeHtml(item.category)}` : ''}
+                                </div>
+                            </label>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="duplicate-group-actions">
+                    <button 
+                        class="btn-delete-selected" 
+                        onclick="deleteSelectedInGroup(${groupIndex})"
+                        id="delete-btn-${groupIndex}"
+                        disabled
+                    >
+                        <i class="bi bi-trash"></i>
+                        선택한 항목 삭제
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function toggleDuplicateItem(checkbox) {
+    const item = checkbox.closest('.duplicate-item');
+    const groupIndex = parseInt(checkbox.dataset.group);
+    const deleteBtn = document.getElementById(`delete-btn-${groupIndex}`);
+
+    // Toggle selected class
+    if (checkbox.checked) {
+        item.classList.add('selected');
+    } else {
+        item.classList.remove('selected');
+    }
+
+    // Enable/disable delete button based on selection
+    const group = checkbox.closest('.duplicate-group');
+    const checkedCount = group.querySelectorAll('input[type="checkbox"]:checked').length;
+    deleteBtn.disabled = checkedCount === 0;
+}
+
+async function deleteSelectedInGroup(groupIndex) {
+    const group = document.querySelector(`[data-group-index="${groupIndex}"]`);
+    const checkedBoxes = group.querySelectorAll('input[type="checkbox"]:checked');
+
+    if (checkedBoxes.length === 0) return;
+
+    const idsToDelete = Array.from(checkedBoxes).map(cb => cb.dataset.id);
+    const totalInGroup = group.querySelectorAll('input[type="checkbox"]').length;
+
+    // Prevent deleting all items in a group
+    if (idsToDelete.length === totalInGroup) {
+        showToast('최소 1개의 항목은 유지해야 합니다.', 'error');
+        return;
+    }
+
+    if (!confirm(`선택한 ${idsToDelete.length}개의 항목을 삭제하시겠습니까?`)) {
+        return;
+    }
+
+    try {
+        // Delete selected items
+        const { error } = await supabase
+            .from('urls')
+            .delete()
+            .in('id', idsToDelete);
+
+        if (error) throw error;
+
+        showToast(`${idsToDelete.length}개의 중복 항목이 삭제되었습니다.`, 'success');
+
+        // Refresh duplicate list
+        await findDuplicates();
+
+        // Refresh main URL list
+        await fetchUrls();
+    } catch (error) {
+        console.error('Delete duplicates error:', error);
+        showToast('삭제 중 오류가 발생했습니다.', 'error');
+    }
+}
+
 // Make functions globally available for onclick handlers
 window.deleteUrl = deleteUrl;
 window.showEditModal = showEditModal;
 window.copyUrl = copyUrl;
+window.toggleDuplicateItem = toggleDuplicateItem;
+window.deleteSelectedInGroup = deleteSelectedInGroup;
