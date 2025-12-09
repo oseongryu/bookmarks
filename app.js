@@ -45,12 +45,14 @@ const elements = {
     loginModal: document.getElementById('loginModal'),
     duplicateModal: document.getElementById('duplicateModal'),
     importModal: document.getElementById('importModal'),
+    bulkDeleteModal: document.getElementById('bulkDeleteModal'),
 
     // Buttons
     logoutBtn: document.getElementById('logoutBtn'),
     duplicateBtn: document.getElementById('duplicateBtn'),
     importBtn: document.getElementById('importBtn'),
     exportBtn: document.getElementById('exportBtn'),
+    bulkDeleteBtn: document.getElementById('bulkDeleteBtn'),
 
     // Duplicate Modal Elements
     duplicateLoading: document.getElementById('duplicateLoading'),
@@ -66,6 +68,20 @@ const elements = {
     progressFill: document.getElementById('progressFill'),
     importStatus: document.getElementById('importStatus'),
 
+    // Bulk Delete Modal Elements
+    bulkDeleteLoading: document.getElementById('bulkDeleteLoading'),
+    bulkDeleteContent: document.getElementById('bulkDeleteContent'),
+    bulkDeleteGrid: document.getElementById('bulkDeleteGrid'),
+    noBulkItems: document.getElementById('noBulkItems'),
+    selectAllBtn: document.getElementById('selectAllBtn'),
+    deselectAllBtn: document.getElementById('deselectAllBtn'),
+    selectedCount: document.getElementById('selectedCount'),
+    deleteBulkBtn: document.getElementById('deleteBulkBtn'),
+
+    // Access Key Display
+    accessKeyDisplay: document.getElementById('accessKeyDisplay'),
+    accessKeyText: document.getElementById('accessKeyText'),
+
     // Toast
     toast: document.getElementById('toast'),
     toastMessage: document.getElementById('toastMessage')
@@ -74,9 +90,11 @@ const elements = {
 // ===== Initialization =====
 document.addEventListener('DOMContentLoaded', async () => {
     if (checkAuth()) {
+        updateAccessKeyDisplay();
         await loadUrls();
         setupEventListeners();
     } else {
+        hideAccessKeyDisplay();
         showLoginModal();
         setupEventListeners();
     }
@@ -89,12 +107,16 @@ function setupEventListeners() {
     elements.editUrlForm.addEventListener('submit', updateUrl);
     elements.loginForm.addEventListener('submit', handleLogin);
 
-    // Logout, Duplicate, Import, Export
+    // Logout, Duplicate, Import, Export, Bulk Delete
     elements.logoutBtn.addEventListener('click', handleLogout);
     elements.duplicateBtn.addEventListener('click', showDuplicateModal);
     elements.importBtn.addEventListener('click', showImportModal);
     elements.exportBtn.addEventListener('click', exportBookmarks);
+    elements.bulkDeleteBtn.addEventListener('click', showBulkDeleteModal);
     elements.importForm.addEventListener('submit', importBookmarks);
+    elements.selectAllBtn.addEventListener('click', selectAllBulkItems);
+    elements.deselectAllBtn.addEventListener('click', deselectAllBulkItems);
+    elements.deleteBulkBtn.addEventListener('click', deleteBulkItems);
 
     // Toggle optional fields
     elements.toggleOptions.addEventListener('click', () => {
@@ -151,6 +173,10 @@ function setupEventListeners() {
 
     document.querySelectorAll('[data-dismiss="import-modal"]').forEach(btn => {
         btn.addEventListener('click', hideImportModal);
+    });
+
+    document.querySelectorAll('[data-dismiss="bulk-delete-modal"]').forEach(btn => {
+        btn.addEventListener('click', hideBulkDeleteModal);
     });
 }
 
@@ -477,6 +503,7 @@ function handleLogin(e) {
         // 모든 키를 유효한 것으로 간주 (각 키마다 별도의 데이터 공간)
         currentAccessKey = inputKey;
         localStorage.setItem(AUTH_STORAGE_KEY, inputKey);
+        updateAccessKeyDisplay();
         hideLoginModal();
         showToast('로그인 성공!', 'success');
         loadUrls();
@@ -490,6 +517,7 @@ function handleLogout() {
     if (confirm('로그아웃 하시겠습니까?')) {
         currentAccessKey = null;
         localStorage.removeItem(AUTH_STORAGE_KEY);
+        hideAccessKeyDisplay();
         showLoginModal();
         showToast('로그아웃 되었습니다.', 'success');
         // Clear state
@@ -508,6 +536,21 @@ function showLoginModal() {
 
 function hideLoginModal() {
     elements.loginModal.classList.remove('show');
+}
+
+// ===== Access Key Display =====
+function updateAccessKeyDisplay() {
+    if (currentAccessKey) {
+        elements.accessKeyText.textContent = currentAccessKey;
+        elements.accessKeyDisplay.style.display = 'flex';
+    } else {
+        hideAccessKeyDisplay();
+    }
+}
+
+function hideAccessKeyDisplay() {
+    elements.accessKeyDisplay.style.display = 'none';
+    elements.accessKeyText.textContent = '-';
 }
 
 // ===== Duplicate Detection and Removal =====
@@ -973,9 +1016,170 @@ function generateBookmarkHTML(urls) {
     return html;
 }
 
+// ===== Bulk Delete Functions =====
+let bulkDeleteItems = [];
+
+async function showBulkDeleteModal() {
+    elements.bulkDeleteModal.classList.add('show');
+    elements.bulkDeleteLoading.classList.remove('d-none');
+    elements.bulkDeleteContent.classList.add('d-none');
+
+    await loadBulkDeleteItems();
+}
+
+function hideBulkDeleteModal() {
+    elements.bulkDeleteModal.classList.remove('show');
+    bulkDeleteItems = [];
+}
+
+async function loadBulkDeleteItems() {
+    try {
+        // Fetch all URLs for current access key
+        const { data, error } = await supabase
+            .from('urls')
+            .select('*')
+            .eq('access_key', currentAccessKey)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        bulkDeleteItems = data || [];
+
+        // Show content
+        elements.bulkDeleteLoading.classList.add('d-none');
+        elements.bulkDeleteContent.classList.remove('d-none');
+
+        if (bulkDeleteItems.length === 0) {
+            elements.bulkDeleteGrid.innerHTML = '';
+            elements.noBulkItems.classList.remove('d-none');
+        } else {
+            elements.noBulkItems.classList.add('d-none');
+            renderBulkDeleteGrid();
+        }
+    } catch (error) {
+        console.error('Load bulk delete items error:', error);
+        showToast('목록을 불러오는 중 오류가 발생했습니다.', 'error');
+        hideBulkDeleteModal();
+    }
+}
+
+function renderBulkDeleteGrid() {
+    elements.bulkDeleteGrid.innerHTML = bulkDeleteItems.map((item, index) => `
+        <div class="bulk-delete-item" data-id="${item.id}" onclick="toggleBulkItem('${item.id}')">
+            <div class="bulk-delete-item-checkbox">
+                <input 
+                    type="checkbox" 
+                    id="bulk-${item.id}"
+                    data-id="${item.id}"
+                    onclick="event.stopPropagation(); toggleBulkItem('${item.id}')"
+                >
+            </div>
+            <div class="bulk-delete-item-title">${escapeHtml(item.title)}</div>
+            <div class="bulk-delete-item-url">${escapeHtml(item.url)}</div>
+            ${item.category ? `<div class="bulk-delete-item-category">${escapeHtml(item.category)}</div>` : ''}
+            <div class="bulk-delete-item-date">${new Date(item.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>
+    `).join('');
+
+    updateBulkDeleteCount();
+}
+
+function toggleBulkItem(id) {
+    const item = document.querySelector(`.bulk-delete-item[data-id="${id}"]`);
+    const checkbox = document.getElementById(`bulk-${id}`);
+
+    if (!item || !checkbox) return;
+
+    checkbox.checked = !checkbox.checked;
+
+    if (checkbox.checked) {
+        item.classList.add('selected');
+    } else {
+        item.classList.remove('selected');
+    }
+
+    updateBulkDeleteCount();
+}
+
+function selectAllBulkItems() {
+    document.querySelectorAll('.bulk-delete-item').forEach(item => {
+        item.classList.add('selected');
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = true;
+    });
+    updateBulkDeleteCount();
+}
+
+function deselectAllBulkItems() {
+    document.querySelectorAll('.bulk-delete-item').forEach(item => {
+        item.classList.remove('selected');
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = false;
+    });
+    updateBulkDeleteCount();
+}
+
+function updateBulkDeleteCount() {
+    const selectedItems = document.querySelectorAll('.bulk-delete-item input[type="checkbox"]:checked');
+    const count = selectedItems.length;
+
+    elements.selectedCount.textContent = count;
+    elements.deleteBulkBtn.disabled = count === 0;
+}
+
+async function deleteBulkItems() {
+    const selectedCheckboxes = document.querySelectorAll('.bulk-delete-item input[type="checkbox"]:checked');
+    const idsToDelete = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+
+    if (idsToDelete.length === 0) return;
+
+    const confirmMessage = idsToDelete.length === bulkDeleteItems.length
+        ? `모든 ${idsToDelete.length}개의 항목을 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다!`
+        : `선택한 ${idsToDelete.length}개의 항목을 삭제하시겠습니까?`;
+
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+
+    try {
+        // Disable button during deletion
+        elements.deleteBulkBtn.disabled = true;
+        elements.deleteBulkBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 삭제 중...';
+
+        // Delete in batches
+        const batchSize = 50;
+        for (let i = 0; i < idsToDelete.length; i += batchSize) {
+            const batch = idsToDelete.slice(i, i + batchSize);
+            const { error } = await supabase
+                .from('urls')
+                .delete()
+                .in('id', batch);
+
+            if (error) throw error;
+        }
+
+        showToast(`${idsToDelete.length}개의 항목이 삭제되었습니다.`, 'success');
+
+        // Refresh the grid
+        await loadBulkDeleteItems();
+
+        // Refresh main URL list
+        await fetchUrls();
+
+        // Reset button
+        elements.deleteBulkBtn.innerHTML = '<i class="bi bi-trash"></i> 선택한 항목 삭제';
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        showToast('삭제 중 오류가 발생했습니다.', 'error');
+        elements.deleteBulkBtn.disabled = false;
+        elements.deleteBulkBtn.innerHTML = '<i class="bi bi-trash"></i> 선택한 항목 삭제';
+    }
+}
+
 // Make functions globally available for onclick handlers
 window.deleteUrl = deleteUrl;
 window.showEditModal = showEditModal;
 window.copyUrl = copyUrl;
 window.toggleDuplicateItem = toggleDuplicateItem;
 window.deleteSelectedInGroup = deleteSelectedInGroup;
+window.toggleBulkItem = toggleBulkItem;

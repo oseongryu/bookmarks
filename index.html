@@ -21,16 +21,25 @@
     <header class="app-header">
         <div class="container">
             <div class="header-content">
-                <h1 class="app-title">
-                    <i class="bi bi-link-45deg"></i>
-                    URL Manager
-                </h1>
+                <div class="header-left">
+                    <h1 class="app-title">
+                        <i class="bi bi-link-45deg"></i>
+                        URL Manager
+                    </h1>
+                    <div class="access-key-display" id="accessKeyDisplay">
+                        <i class="bi bi-key-fill"></i>
+                        <span id="accessKeyText">-</span>
+                    </div>
+                </div>
                 <div class="header-actions">
                     <button class="btn-import" id="importBtn" title="북마크 가져오기">
                         <i class="bi bi-upload"></i>
                     </button>
                     <button class="btn-export" id="exportBtn" title="북마크 내보내기">
                         <i class="bi bi-download"></i>
+                    </button>
+                    <button class="btn-bulk-delete" id="bulkDeleteBtn" title="일괄 삭제">
+                        <i class="bi bi-trash3"></i>
                     </button>
                     <button class="btn-duplicate" id="duplicateBtn" title="중복 제거">
                         <i class="bi bi-funnel"></i>
@@ -41,6 +50,7 @@
                     </button>
                 </div>
             </div>
+        </div>
         </div>
     </header>
 
@@ -252,6 +262,59 @@
                     <div id="noDuplicates" class="no-duplicates d-none">
                         <i class="bi bi-check-circle"></i>
                         <p>중복된 URL이 없습니다!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Delete Modal -->
+    <div class="modal" id="bulkDeleteModal">
+        <div class="modal-overlay" data-dismiss="bulk-delete-modal"></div>
+        <div class="modal-content modal-wide modal-tall">
+            <div class="modal-header">
+                <h3>🗑️ 일괄 삭제</h3>
+                <button type="button" class="btn-close" data-dismiss="bulk-delete-modal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="bulkDeleteLoading" class="bulk-delete-loading d-none">
+                    <div class="spinner"></div>
+                    <p>URL 목록을 불러오는 중...</p>
+                </div>
+
+                <div id="bulkDeleteContent" class="bulk-delete-content">
+                    <div class="bulk-delete-header">
+                        <p class="bulk-delete-description">
+                            삭제할 항목을 선택하세요. 한 번에 여러 항목을 선택할 수 있습니다.
+                        </p>
+                        <div class="bulk-delete-controls">
+                            <button class="btn-select-all" id="selectAllBtn">
+                                <i class="bi bi-check-square"></i> 전체 선택
+                            </button>
+                            <button class="btn-deselect-all" id="deselectAllBtn">
+                                <i class="bi bi-square"></i> 선택 해제
+                            </button>
+                            <div class="selected-count">
+                                선택됨: <span id="selectedCount">0</span>개
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="bulkDeleteGrid" class="bulk-delete-grid">
+                        <!-- Grid items will be rendered here -->
+                    </div>
+
+                    <div id="noBulkItems" class="no-bulk-items d-none">
+                        <i class="bi bi-inbox"></i>
+                        <p>삭제할 항목이 없습니다.</p>
+                    </div>
+
+                    <div class="bulk-delete-actions">
+                        <button class="btn-delete-bulk" id="deleteBulkBtn" disabled>
+                            <i class="bi bi-trash"></i> 선택한 항목 삭제
+                        </button>
                     </div>
                 </div>
             </div>

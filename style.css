@@ -57,6 +57,13 @@ body {
     gap: 12px;
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -76,6 +83,31 @@ body {
 .app-title i {
     font-size: 24px;
 }
+
+.access-key-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: white;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+.access-key-display i {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+#accessKeyText {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
 
 .btn-logout {
     width: 40px;
@@ -148,6 +180,30 @@ body {
 .btn-export:active {
     transform: scale(0.95);
 }
+
+.btn-bulk-delete {
+    width: 40px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 18px;
+}
+
+.btn-bulk-delete:hover {
+    background: rgba(255, 100, 100, 0.3);
+}
+
+.btn-bulk-delete:active {
+    transform: scale(0.95);
+}
+
 
 
 
@@ -789,6 +845,11 @@ body:not(.edit-mode) .btn-icon.delete {
     max-width: 700px;
 }
 
+.modal-tall {
+    max-height: 85vh;
+}
+
+
 .duplicate-loading {
     text-align: center;
     padding: 40px 20px;
@@ -972,6 +1033,228 @@ body:not(.edit-mode) .btn-icon.delete {
     font-size: 16px;
     font-weight: 600;
     margin: 0;
+}
+
+/* ===== Bulk Delete Modal ===== */
+.bulk-delete-loading {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.bulk-delete-loading .spinner {
+    margin: 0 auto 16px;
+}
+
+.bulk-delete-loading p {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.bulk-delete-header {
+    margin-bottom: 20px;
+}
+
+.bulk-delete-description {
+    color: var(--text-light);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg);
+    border-radius: var(--radius);
+}
+
+.bulk-delete-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-select-all,
+.btn-deselect-all {
+    padding: 8px 16px;
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-select-all:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.btn-deselect-all:hover {
+    border-color: var(--text-light);
+    background: var(--bg);
+}
+
+.btn-select-all:active,
+.btn-deselect-all:active {
+    transform: scale(0.98);
+}
+
+.selected-count {
+    margin-left: auto;
+    padding: 8px 16px;
+    background: var(--primary);
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.bulk-delete-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 4px;
+    margin-bottom: 20px;
+}
+
+.bulk-delete-item {
+    position: relative;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bulk-delete-item:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.bulk-delete-item.selected {
+    border-color: var(--success);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.bulk-delete-item-checkbox {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+
+.bulk-delete-item-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--success);
+}
+
+.bulk-delete-item-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    word-break: break-word;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding-right: 24px;
+}
+
+.bulk-delete-item-url {
+    font-size: 11px;
+    color: var(--primary);
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+}
+
+.bulk-delete-item-category {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+.bulk-delete-item-date {
+    font-size: 10px;
+    color: var(--text-light);
+    margin-top: auto;
+}
+
+.no-bulk-items {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+}
+
+.no-bulk-items i {
+    font-size: 64px;
+    opacity: 0.3;
+    margin-bottom: 16px;
+}
+
+.no-bulk-items p {
+    font-size: 16px;
+    margin: 0;
+}
+
+.bulk-delete-actions {
+    padding-top: 16px;
+    border-top: 2px solid var(--border);
+}
+
+.btn-delete-bulk {
+    width: 100%;
+    padding: 14px;
+    background: var(--danger);
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-delete-bulk:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete-bulk:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.btn-delete-bulk:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* ===== Import Modal ===== */
