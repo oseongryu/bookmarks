@@ -44,16 +44,27 @@ const elements = {
     editModal: document.getElementById('editModal'),
     loginModal: document.getElementById('loginModal'),
     duplicateModal: document.getElementById('duplicateModal'),
+    importModal: document.getElementById('importModal'),
 
     // Buttons
     logoutBtn: document.getElementById('logoutBtn'),
     duplicateBtn: document.getElementById('duplicateBtn'),
+    importBtn: document.getElementById('importBtn'),
+    exportBtn: document.getElementById('exportBtn'),
 
     // Duplicate Modal Elements
     duplicateLoading: document.getElementById('duplicateLoading'),
     duplicateContent: document.getElementById('duplicateContent'),
     duplicateList: document.getElementById('duplicateList'),
     noDuplicates: document.getElementById('noDuplicates'),
+
+    // Import Modal Elements
+    importForm: document.getElementById('importForm'),
+    bookmarkFile: document.getElementById('bookmarkFile'),
+    skipDuplicates: document.getElementById('skipDuplicates'),
+    importProgress: document.getElementById('importProgress'),
+    progressFill: document.getElementById('progressFill'),
+    importStatus: document.getElementById('importStatus'),
 
     // Toast
     toast: document.getElementById('toast'),
@@ -78,9 +89,12 @@ function setupEventListeners() {
     elements.editUrlForm.addEventListener('submit', updateUrl);
     elements.loginForm.addEventListener('submit', handleLogin);
 
-    // Logout and Duplicate
+    // Logout, Duplicate, Import, Export
     elements.logoutBtn.addEventListener('click', handleLogout);
     elements.duplicateBtn.addEventListener('click', showDuplicateModal);
+    elements.importBtn.addEventListener('click', showImportModal);
+    elements.exportBtn.addEventListener('click', exportBookmarks);
+    elements.importForm.addEventListener('submit', importBookmarks);
 
     // Toggle optional fields
     elements.toggleOptions.addEventListener('click', () => {
@@ -133,6 +147,10 @@ function setupEventListeners() {
 
     document.querySelectorAll('[data-dismiss="duplicate-modal"]').forEach(btn => {
         btn.addEventListener('click', hideDuplicateModal);
+    });
+
+    document.querySelectorAll('[data-dismiss="import-modal"]').forEach(btn => {
+        btn.addEventListener('click', hideImportModal);
     });
 }
 
@@ -685,6 +703,274 @@ async function deleteSelectedInGroup(groupIndex) {
         console.error('Delete duplicates error:', error);
         showToast('삭제 중 오류가 발생했습니다.', 'error');
     }
+}
+
+// ===== Import/Export Functions =====
+function showImportModal() {
+    elements.importModal.classList.add('show');
+    elements.importForm.reset();
+    elements.importProgress.classList.add('d-none');
+}
+
+function hideImportModal() {
+    elements.importModal.classList.remove('show');
+}
+
+async function importBookmarks(e) {
+    e.preventDefault();
+
+    const file = elements.bookmarkFile.files[0];
+    if (!file) {
+        showToast('파일을 선택해주세요.', 'error');
+        return;
+    }
+
+    try {
+        // Show progress
+        elements.importForm.classList.add('d-none');
+        elements.importProgress.classList.remove('d-none');
+        elements.progressFill.style.width = '0%';
+        elements.importStatus.textContent = '파일을 읽는 중...';
+
+        // Read file
+        const text = await file.text();
+        elements.progressFill.style.width = '20%';
+
+        // Parse bookmarks
+        elements.importStatus.textContent = '북마크를 분석 중...';
+        const bookmarks = parseBookmarkHTML(text);
+        elements.progressFill.style.width = '40%';
+
+        if (bookmarks.length === 0) {
+            throw new Error('북마크를 찾을 수 없습니다.');
+        }
+
+        // Get existing URLs if skip duplicates is enabled
+        let existingUrls = new Set();
+        if (elements.skipDuplicates.checked) {
+            elements.importStatus.textContent = '중복 확인 중...';
+            const { data, error } = await supabase
+                .from('urls')
+                .select('url')
+                .eq('access_key', currentAccessKey);
+
+            if (!error && data) {
+                existingUrls = new Set(data.map(item => normalizeUrl(item.url)));
+            }
+            elements.progressFill.style.width = '50%';
+        }
+
+        // Filter duplicates
+        const bookmarksToImport = elements.skipDuplicates.checked
+            ? bookmarks.filter(bm => !existingUrls.has(normalizeUrl(bm.url)))
+            : bookmarks;
+
+        if (bookmarksToImport.length === 0) {
+            showToast('가져올 새로운 북마크가 없습니다.', 'error');
+            hideImportModal();
+            return;
+        }
+
+        // Import bookmarks in batches
+        elements.importStatus.textContent = `${bookmarksToImport.length}개의 북마크를 가져오는 중...`;
+        const batchSize = 50;
+        let imported = 0;
+
+        for (let i = 0; i < bookmarksToImport.length; i += batchSize) {
+            const batch = bookmarksToImport.slice(i, i + batchSize);
+            const urlData = batch.map(bm => ({
+                access_key: currentAccessKey,
+                title: bm.title || bm.url,
+                url: bm.url,
+                category: bm.category || null,
+                description: null
+            }));
+
+            const { error } = await supabase
+                .from('urls')
+                .insert(urlData);
+
+            if (error) {
+                console.error('Batch import error:', error);
+            } else {
+                imported += batch.length;
+            }
+
+            // Update progress
+            const progress = 50 + (imported / bookmarksToImport.length * 50);
+            elements.progressFill.style.width = `${progress}%`;
+            elements.importStatus.textContent = `${imported} / ${bookmarksToImport.length} 가져옴...`;
+        }
+
+        elements.progressFill.style.width = '100%';
+
+        const skipped = bookmarks.length - bookmarksToImport.length;
+        const message = skipped > 0
+            ? `${imported}개의 북마크를 가져왔습니다. (${skipped}개 중복 제외)`
+            : `${imported}개의 북마크를 가져왔습니다.`;
+
+        showToast(message, 'success');
+        hideImportModal();
+        await loadUrls();
+    } catch (error) {
+        console.error('Import error:', error);
+        showToast('북마크 가져오기 실패: ' + error.message, 'error');
+        elements.importForm.classList.remove('d-none');
+        elements.importProgress.classList.add('d-none');
+    }
+}
+
+function parseBookmarkHTML(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const bookmarks = [];
+
+    // Find all bookmark links (A tags with HREF)
+    const links = doc.querySelectorAll('a[href]');
+
+    links.forEach(link => {
+        const url = link.getAttribute('href');
+        const title = link.textContent.trim();
+
+        // Skip empty URLs or non-http(s) URLs
+        if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+            return;
+        }
+
+        // Try to find category from parent DT/DL structure
+        let category = null;
+        let parent = link.parentElement;
+        while (parent && parent.tagName !== 'BODY') {
+            if (parent.tagName === 'DL') {
+                // Look for previous H3 sibling
+                const prevSibling = parent.previousElementSibling;
+                if (prevSibling && prevSibling.tagName === 'H3') {
+                    category = prevSibling.textContent.trim();
+                    break;
+                }
+            }
+            parent = parent.parentElement;
+        }
+
+        bookmarks.push({
+            url: url,
+            title: title || url,
+            category: category
+        });
+    });
+
+    return bookmarks;
+}
+
+async function exportBookmarks() {
+    try {
+        // Fetch all URLs for current access key
+        const { data, error } = await supabase
+            .from('urls')
+            .select('*')
+            .eq('access_key', currentAccessKey)
+            .order('category', { ascending: true })
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            showToast('내보낼 북마크가 없습니다.', 'error');
+            return;
+        }
+
+        // Generate Chrome/Edge compatible HTML
+        const html = generateBookmarkHTML(data);
+
+        // Create and download file
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Generate filename with timestamp
+        const now = new Date();
+        const timestamp = now.getFullYear() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') + '_' +
+            String(now.getHours()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0');
+
+        a.download = `bookmarks_${timestamp}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast(`${data.length}개의 북마크를 내보냈습니다.`, 'success');
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('북마크 내보내기 실패', 'error');
+    }
+}
+
+function generateBookmarkHTML(urls) {
+    // Group by category
+    const grouped = {};
+    const uncategorized = [];
+
+    urls.forEach(url => {
+        if (url.category) {
+            if (!grouped[url.category]) {
+                grouped[url.category] = [];
+            }
+            grouped[url.category].push(url);
+        } else {
+            uncategorized.push(url);
+        }
+    });
+
+    // Generate HTML in Chrome/Edge bookmark format
+    let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+`;
+    html += `<!-- This is an automatically generated file.
+`;
+    html += `     It will be read and overwritten.
+`;
+    html += `     DO NOT EDIT! -->
+`;
+    html += `<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+`;
+    html += `<TITLE>Bookmarks</TITLE>
+`;
+    html += `<H1>Bookmarks</H1>
+`;
+    html += `<DL><p>
+`;
+
+    // Add categorized bookmarks
+    Object.keys(grouped).sort().forEach(category => {
+        html += `    <DT><H3>${escapeHtml(category)}</H3>
+`;
+        html += `    <DL><p>
+`;
+        grouped[category].forEach(url => {
+            const timestamp = Math.floor(new Date(url.created_at).getTime() / 1000);
+            html += `        <DT><A HREF="${escapeHtml(url.url)}" ADD_DATE="${timestamp}">${escapeHtml(url.title)}</A>
+`;
+        });
+        html += `    </DL><p>
+`;
+    });
+
+    // Add uncategorized bookmarks
+    if (uncategorized.length > 0) {
+        uncategorized.forEach(url => {
+            const timestamp = Math.floor(new Date(url.created_at).getTime() / 1000);
+            html += `    <DT><A HREF="${escapeHtml(url.url)}" ADD_DATE="${timestamp}">${escapeHtml(url.title)}</A>
+`;
+        });
+    }
+
+    html += `</DL><p>
+`;
+
+    return html;
 }
 
 // Make functions globally available for onclick handlers

@@ -26,6 +26,12 @@
                     URL Manager
                 </h1>
                 <div class="header-actions">
+                    <button class="btn-import" id="importBtn" title="북마크 가져오기">
+                        <i class="bi bi-upload"></i>
+                    </button>
+                    <button class="btn-export" id="exportBtn" title="북마크 내보내기">
+                        <i class="bi bi-download"></i>
+                    </button>
                     <button class="btn-duplicate" id="duplicateBtn" title="중복 제거">
                         <i class="bi bi-funnel"></i>
                     </button>
@@ -252,10 +258,55 @@
         </div>
     </div>
 
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-overlay" data-dismiss="import-modal"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📥 북마크 가져오기</h3>
+                <button type="button" class="btn-close" data-dismiss="import-modal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="import-description">
+                    Chrome 또는 Edge에서 내보낸 북마크 HTML 파일을 선택하세요.
+                    <br><br>
+                    <strong>브라우저에서 북마크 내보내기:</strong><br>
+                    • Chrome: 설정 → 북마크 → 북마크 관리자 → ⋮ → 북마크 내보내기<br>
+                    • Edge: 설정 → 즐겨찾기 → 즐겨찾기 내보내기
+                </p>
+                <form id="importForm">
+                    <div class="form-group">
+                        <input type="file" class="form-input" id="bookmarkFile" accept=".html,.htm" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="skipDuplicates" checked>
+                            <span>중복 URL 건너뛰기</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-upload"></i> 가져오기
+                    </button>
+                </form>
+                <div id="importProgress" class="import-progress d-none">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="importStatus">가져오는 중...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="toast" id="toast">
         <div class="toast-message" id="toastMessage"></div>
     </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="hiddenFileInput" accept=".html,.htm" style="display: none;">
 
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
