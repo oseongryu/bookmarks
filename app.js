@@ -924,6 +924,7 @@ function parseBookmarkHTML(html) {
 
     // Find all bookmark links (A tags with HREF)
     const links = doc.querySelectorAll('a[href]');
+    console.log('Total links found:', links.length);
 
     links.forEach(link => {
         const url = link.getAttribute('href');
@@ -940,36 +941,39 @@ function parseBookmarkHTML(html) {
             url.startsWith('chrome://');
 
         if (!isValidUrl) {
+            console.log('Skipping invalid URL:', url);
             return;
         }
 
         // Build category path from all parent H3 elements
         const categoryPath = [];
-        let parent = link.parentElement;
+        let element = link;
 
         // Traverse up the DOM tree to collect all category levels
-        while (parent && parent.tagName !== 'BODY') {
-            if (parent.tagName === 'DL') {
+        while (element && element.tagName !== 'BODY') {
+            // Move to parent
+            element = element.parentElement;
+
+            if (element && element.tagName === 'DL') {
                 // Check if this DL has a parent DT with H3
-                const parentDT = parent.parentElement;
+                const parentDT = element.parentElement;
                 if (parentDT && parentDT.tagName === 'DT') {
                     const h3 = parentDT.querySelector(':scope > h3');
                     if (h3) {
-                        // Add to the beginning to maintain hierarchy
-                        categoryPath.unshift(h3.textContent.trim());
+                        const categoryName = h3.textContent.trim();
+                        // Only add if not already in path (avoid duplicates)
+                        if (!categoryPath.includes(categoryName)) {
+                            categoryPath.unshift(categoryName);
+                        }
                     }
                 }
-                // Also check previous sibling (alternative structure)
-                const prevSibling = parent.previousElementSibling;
-                if (prevSibling && prevSibling.tagName === 'H3') {
-                    categoryPath.unshift(prevSibling.textContent.trim());
-                }
             }
-            parent = parent.parentElement;
         }
 
         // Join category path with '/' separator
         const category = categoryPath.length > 0 ? categoryPath.join('/') : null;
+
+        console.log('URL:', url, 'Category:', category);
 
         bookmarks.push({
             url: url,
@@ -977,6 +981,11 @@ function parseBookmarkHTML(html) {
             category: category
         });
     });
+
+    console.log('Valid bookmarks parsed:', bookmarks.length);
+    if (bookmarks.length > 0) {
+        console.log('Sample bookmark:', bookmarks[0]);
+    }
 
     return bookmarks;
 }
@@ -1040,28 +1049,20 @@ function generateBookmarkHTML(urls) {
 
             // Navigate/create tree structure
             let current = tree;
-            parts.forEach(part => {
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
                 if (!current[part]) {
                     current[part] = { _folders: {}, _bookmarks: [] };
                 }
-                current = current[part]._folders;
-            });
 
-            // Add bookmark to the deepest level
-            const lastPart = parts[parts.length - 1];
-            if (!tree[parts[0]]) {
-                tree[parts[0]] = { _folders: {}, _bookmarks: [] };
+                // If this is the last part, add bookmark here
+                if (i === parts.length - 1) {
+                    current[part]._bookmarks.push(url);
+                } else {
+                    // Otherwise, navigate deeper
+                    current = current[part]._folders;
+                }
             }
-
-            // Navigate to correct position
-            current = tree;
-            for (let i = 0; i < parts.length - 1; i++) {
-                current = current[parts[i]]._folders;
-            }
-            if (!current[lastPart]) {
-                current[lastPart] = { _folders: {}, _bookmarks: [] };
-            }
-            current[lastPart]._bookmarks.push(url);
         } else {
             uncategorized.push(url);
         }
