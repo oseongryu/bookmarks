@@ -277,10 +277,17 @@ body {
     color: var(--primary);
 }
 
-/* ===== Auto Title Toggle ===== */
-.auto-title-toggle {
-    display: flex;
-    align-items: center;
+.tools-dropdown-item i {
+    font-size: 18px;
+}
+
+.tools-dropdown-item:active {
+    transform: scale(0.98);
+}
+
+/* ===== Tools Dropdown Toggles ===== */
+.tools-dropdown-toggle {
+    padding: 12px 16px;
 }
 
 .toggle-label {
@@ -331,56 +338,10 @@ body {
     color: var(--text);
 }
 
-.tools-dropdown-item i {
-    font-size: 18px;
-}
-
-.tools-dropdown-item:active {
-    transform: scale(0.98);
-}
 
 
 
 
-
-
-.btn-edit-toggle {
-    width: 56px;
-    height: 32px;
-    border: none;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 3px;
-    transition: all 0.3s ease;
-    position: relative;
-    flex-shrink: 0;
-}
-
-.btn-edit-toggle::before {
-    content: '';
-    width: 26px;
-    height: 26px;
-    background: white;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.btn-edit-toggle:active::before {
-    width: 30px;
-}
-
-.btn-edit-toggle.active {
-    background: rgba(255, 255, 255, 0.95);
-}
-
-.btn-edit-toggle.active::before {
-    transform: translateX(24px);
-    background: var(--primary);
-}
 
 /* ===== Main Content ===== */
 .app-main {

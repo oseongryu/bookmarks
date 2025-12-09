@@ -103,6 +103,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         elements.autoFetchTitleToggle.checked = autoFetchTitle === 'true';
     }
 
+    // Restore edit mode toggle state
+    const editMode = localStorage.getItem('editMode');
+    if (editMode === 'true') {
+        elements.editModeToggle.checked = true;
+        document.body.classList.add('edit-mode');
+    }
+
     if (checkAuth()) {
         updateAccessKeyDisplay();
         await loadUrls();
@@ -166,9 +173,13 @@ function setupEventListeners() {
     });
 
     // Toggle edit mode
-    elements.editModeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('edit-mode');
-        elements.editModeToggle.classList.toggle('active');
+    elements.editModeToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            document.body.classList.add('edit-mode');
+        } else {
+            document.body.classList.remove('edit-mode');
+        }
+        localStorage.setItem('editMode', e.target.checked);
     });
 
     // Auto fetch title toggle
