@@ -230,7 +230,7 @@ async function deleteUrl(id) {
         if (error) throw error;
 
         showToast('URL이 삭제되었습니다.', 'success');
-        await loadUrls();
+        await fetchUrls();
     } catch (error) {
         console.error('Delete URL error:', error);
         showToast('URL 삭제 중 오류가 발생했습니다.', 'error');
@@ -275,7 +275,7 @@ async function updateUrl(e) {
 
         showToast('URL이 수정되었습니다!', 'success');
         hideEditModal();
-        await loadUrls();
+        await fetchUrls();
     } catch (error) {
         console.error('Update URL error:', error);
         showToast('URL 수정 중 오류가 발생했습니다.', 'error');
