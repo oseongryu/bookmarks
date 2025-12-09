@@ -27,6 +27,12 @@ const elements = {
     searchInput: document.getElementById('searchInput'),
     refreshBtn: document.getElementById('refreshBtn'),
 
+    // Search Filters
+    searchTitle: document.getElementById('searchTitle'),
+    searchUrl: document.getElementById('searchUrl'),
+    searchCategory: document.getElementById('searchCategory'),
+    searchDescription: document.getElementById('searchDescription'),
+
     // Pagination
     itemsPerPageSelect: document.getElementById('itemsPerPage'),
     paginationNav: document.getElementById('paginationNav'),
@@ -82,6 +88,12 @@ function setupEventListeners() {
     // Search and refresh
     elements.searchInput.addEventListener('input', searchUrls);
     elements.refreshBtn.addEventListener('click', loadUrls);
+
+    // Search filters
+    elements.searchTitle.addEventListener('change', searchUrls);
+    elements.searchUrl.addEventListener('change', searchUrls);
+    elements.searchCategory.addEventListener('change', searchUrls);
+    elements.searchDescription.addEventListener('change', searchUrls);
 
     // Pagination
     elements.itemsPerPageSelect.addEventListener('change', (e) => {
@@ -139,16 +151,26 @@ async function fetchUrls() {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage - 1;
 
-        // Build query (excluding category and description)
+        // Build query - fetch all fields for search
         let query = supabase
             .from('urls')
-            .select('id, title, url, created_at', { count: 'exact' })
+            .select('id, title, url, category, description, created_at', { count: 'exact' })
             .eq('access_key', currentAccessKey)
             .order('created_at', { ascending: false });
 
-        // Apply search filter if exists (only search url)
+        // Apply search filter if exists
         if (searchQuery) {
-            query = query.ilike('url', `%${searchQuery}%`);
+            const searchFields = [];
+            if (elements.searchTitle.checked) searchFields.push('title');
+            if (elements.searchUrl.checked) searchFields.push('url');
+            if (elements.searchCategory.checked) searchFields.push('category');
+            if (elements.searchDescription.checked) searchFields.push('description');
+
+            // If at least one field is selected, apply OR filter
+            if (searchFields.length > 0) {
+                const orConditions = searchFields.map(field => `${field}.ilike.%${searchQuery}%`).join(',');
+                query = query.or(orConditions);
+            }
         }
 
         // Apply pagination
