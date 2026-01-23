@@ -308,39 +308,58 @@ async function fetchUrls() {
 async function addUrl(e) {
     e.preventDefault();
 
-    const title = document.getElementById('urlTitle').value.trim();
-    const url = document.getElementById('urlAddress').value.trim();
+    const titleInput = document.getElementById('urlTitle').value.trim();
+    const rawUrlInput = document.getElementById('urlAddress').value.trim();
+    
+    // Split by newlines and filter empty lines
+    const urls = rawUrlInput.split(/[\n\r]+/).map(u => u.trim()).filter(u => u.length > 0);
+
+    if (urls.length === 0) {
+        showToast('URL을 입력해주세요.', 'error');
+        return;
+    }
 
     try {
-        let finalTitle = title;
+        const category = document.getElementById('urlCategory').value.trim() || null;
+        const description = document.getElementById('urlDescription').value.trim() || null;
+        
+        const now = new Date();
+        const timestampBase = now.getFullYear() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') + '_' +
+            String(now.getHours()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0') +
+            String(now.getSeconds()).padStart(2, '0');
 
-        // If title is empty, use timestamp as temporary title
-        if (!title) {
-            const now = new Date();
-            finalTitle = now.getFullYear() +
-                String(now.getMonth() + 1).padStart(2, '0') +
-                String(now.getDate()).padStart(2, '0') + '_' +
-                String(now.getHours()).padStart(2, '0') +
-                String(now.getMinutes()).padStart(2, '0') +
-                String(now.getSeconds()).padStart(2, '0');
-        }
+        const urlDataList = urls.map((url, index) => {
+            let finalTitle = titleInput;
 
-        const urlData = {
-            access_key: currentAccessKey,
-            title: finalTitle,
-            url: url,
-            category: document.getElementById('urlCategory').value.trim() || null,
-            description: document.getElementById('urlDescription').value.trim() || null
-        };
+            // If title is empty, use timestamp as temporary title
+            if (!finalTitle) {
+                finalTitle = urls.length > 1 ? `${timestampBase}_${index + 1}` : timestampBase;
+            } else if (urls.length > 1) {
+                // If title provided and multiple items, append index
+                finalTitle = `${finalTitle} (${index + 1})`;
+            }
+
+            return {
+                access_key: currentAccessKey,
+                title: finalTitle,
+                url: url,
+                category: category,
+                description: description
+            };
+        });
 
         const { data, error } = await supabase
             .from('urls')
-            .insert([urlData])
+            .insert(urlDataList)
             .select();
 
         if (error) throw error;
 
-        showToast('URL이 추가되었습니다!', 'success');
+        const count = urlDataList.length;
+        showToast(`${count}개의 URL이 추가되었습니다!`, 'success');
         elements.addUrlForm.reset();
 
         // Hide optional fields after submit
@@ -350,8 +369,17 @@ async function addUrl(e) {
         await loadUrls();
 
         // If title was empty and auto-fetch is enabled, fetch it in the background and update
-        if (!title && data && data[0] && elements.autoFetchTitleToggle.checked) {
-            fetchAndUpdateTitle(data[0].id, url);
+        // We do this for all inserted items where title wasn't manually provided (or even if it was auto-generated)
+        if (elements.autoFetchTitleToggle.checked && data) {
+            // Process sequentially or parallel? Parallel might hit rate limits but let's try Promise.all
+            // with a small delay or just map
+            data.forEach((item, i) => {
+                // Only fetch if we used the timestamp title (meaning user didn't provide one)
+                // The logical check is if !titleInput.
+                if (!titleInput) {
+                    fetchAndUpdateTitle(item.id, item.url);
+                }
+            });
         }
     } catch (error) {
         console.error('Add URL error:', error);
