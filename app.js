@@ -827,7 +827,11 @@ async function findDuplicates() {
 
 function renderDuplicateGroups(groups) {
     elements.duplicateList.innerHTML = groups.map((group, groupIndex) => {
-        const normalizedUrl = normalizeUrl(group[0].url);
+        // Sort by created_at to find the oldest item
+        const sortedGroup = [...group].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        const oldestItem = sortedGroup[0]; // 가장 오래된 항목
+        const itemsToShow = sortedGroup.slice(1); // 가장 오래된 것 제외
+        
         return `
             <div class="duplicate-group" data-group-index="${groupIndex}">
                 <div class="duplicate-group-header">
@@ -839,7 +843,23 @@ function renderDuplicateGroups(groups) {
                 </div>
                 
                 <div class="duplicate-items">
-                    ${group.map((item, itemIndex) => `
+                    <div class="duplicate-item-kept" data-item-id="${oldestItem.id}">
+                        <div class="duplicate-item-kept-badge">
+                            <span class="badge-kept">유지됨</span>
+                        </div>
+                        <label class="duplicate-item-info">
+                            <div class="duplicate-item-title">${escapeHtml(oldestItem.title)}</div>
+                            <div class="duplicate-item-url">${escapeHtml(oldestItem.url)}</div>
+                            <div class="duplicate-item-meta">
+                                등록: ${new Date(oldestItem.created_at).toLocaleString('ko-KR')}
+                                ${oldestItem.category ? ` • 카테고리: ${escapeHtml(oldestItem.category)}` : ''}
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="duplicate-divider"></div>
+
+                    ${itemsToShow.map((item, itemIndex) => `
                         <div class="duplicate-item" data-item-id="${item.id}">
                             <div class="duplicate-item-checkbox">
                                 <input 
@@ -903,13 +923,6 @@ async function deleteSelectedInGroup(groupIndex) {
     if (checkedBoxes.length === 0) return;
 
     const idsToDelete = Array.from(checkedBoxes).map(cb => cb.dataset.id);
-    const totalInGroup = group.querySelectorAll('input[type="checkbox"]').length;
-
-    // Prevent deleting all items in a group
-    if (idsToDelete.length === totalInGroup) {
-        showToast('최소 1개의 항목은 유지해야 합니다.', 'error');
-        return;
-    }
 
     if (!confirm(`선택한 ${idsToDelete.length}개의 항목을 삭제하시겠습니까?`)) {
         return;

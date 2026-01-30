@@ -1044,6 +1044,36 @@ body:not(.edit-mode) .btn-icon.delete {
     background: rgba(16, 185, 129, 0.05);
 }
 
+.duplicate-item-kept {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(16, 185, 129, 0.08);
+    border-radius: 8px;
+    border: 2px solid var(--success);
+}
+
+.duplicate-item-kept-badge {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.badge-kept {
+    background: var(--success);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.duplicate-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+}
+
 .duplicate-item-checkbox {
     margin-top: 2px;
 }
