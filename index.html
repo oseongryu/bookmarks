@@ -23,9 +23,21 @@
             <div class="header-content">
                 <div class="header-left">
                     <h1 class="app-title">
-                        <i class="bi bi-link-45deg"></i>
-                        URL Manager
+                        <i class="bi bi-link-45deg" id="appIcon"></i>
+                        <span id="appTitle">URL Manager</span>
                     </h1>
+                </div>
+                <div class="header-center">
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" data-mode="url" id="urlModeBtn">
+                            <i class="bi bi-link-45deg"></i>
+                            <span>URL</span>
+                        </button>
+                        <button class="mode-btn" data-mode="memo" id="memoModeBtn">
+                            <i class="bi bi-sticky"></i>
+                            <span>메모</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="header-actions">
                     <div class="tools-menu-container">
@@ -92,9 +104,21 @@
             <!-- Quick Add Form -->
             <div class="quick-add-card">
                 <form id="addUrlForm">
-                    <div class="form-group">
+                    <!-- URL Mode Fields -->
+                    <div class="form-group url-mode-field">
                         <textarea class="form-input" id="urlAddress" placeholder="https://example.com&#10;https://another-example.com" required
                             autocomplete="off" rows="3"></textarea>
+                    </div>
+
+                    <!-- Memo Mode Fields -->
+                    <div class="form-group memo-mode-field" style="display: none;">
+                        <input type="text" class="form-input" id="memoTitle" placeholder="메모 제목" 
+                            autocomplete="off">
+                    </div>
+
+                    <div class="form-group memo-mode-field" style="display: none;">
+                        <textarea class="form-input" id="memoContent" placeholder="메모 내용을 입력하세요..." 
+                            autocomplete="off" rows="5"></textarea>
                     </div>
 
                     <!-- Optional Fields Toggle -->
@@ -104,7 +128,7 @@
                     </button>
 
                     <div class="optional-fields" id="optionalFields">
-                        <div class="form-group">
+                        <div class="form-group url-mode-field">
                             <input type="text" class="form-input" id="urlTitle" placeholder="제목 (선택)"
                                 autocomplete="off">
                         </div>
@@ -122,7 +146,7 @@
 
                     <button type="submit" class="btn-add">
                         <i class="bi bi-plus-circle"></i>
-                        URL 추가
+                        <span id="addButtonText">URL 추가</span>
                     </button>
                 </form>
             </div>
@@ -228,6 +252,43 @@
                     <div class="form-group">
                         <label class="form-label">설명</label>
                         <textarea class="form-input" id="editUrlDescription" rows="2"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-check-lg"></i> 저장
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Memo Modal -->
+    <div class="modal" id="editMemoModal">
+        <div class="modal-overlay" data-dismiss="memo-modal"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>메모 수정</h3>
+                <button type="button" class="btn-close" data-dismiss="memo-modal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editMemoForm">
+                    <input type="hidden" id="editMemoId">
+
+                    <div class="form-group">
+                        <label class="form-label">제목</label>
+                        <input type="text" class="form-input" id="editMemoTitle" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">내용</label>
+                        <textarea class="form-input" id="editMemoContent" rows="8" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">카테고리</label>
+                        <input type="text" class="form-input" id="editMemoCategory">
                     </div>
 
                     <button type="submit" class="btn-save">
