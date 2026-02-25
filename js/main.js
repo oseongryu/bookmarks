@@ -2,7 +2,7 @@ import { state, elements } from './state.js';
 import { checkAuth, handleLogin, handleLogout } from './auth.js';
 import { loadUrls, addUrl, updateUrl, deleteUrl, fetchUrls } from './urls.js';
 import { loadMemos, addMemo, updateMemo, deleteMemo, fetchMemos, toggleMemoContent } from './memos.js';
-import { showToast, showEditModal, showEditMemoModal, hideEditModal, hideMemoModal, hideDuplicateModal, hideImportModal, hideBulkDeleteModal, showDuplicateModal, showImportModal, showBulkDeleteModal, toggleUserMenu, closeUserMenu, toggleToolsMenu, closeToolsMenu, updateAccessKeyDisplay } from './ui.js';
+import { showToast, showEditModal, showEditMemoModal, hideEditModal, hideMemoModal, hideDuplicateModal, hideImportModal, hideBulkDeleteModal, showDuplicateModal, showImportModal, showBulkDeleteModal, toggleUserMenu, closeUserMenu, toggleToolsMenu, closeToolsMenu, updateAccessKeyDisplay, showLoginModal, hideLoginModal } from './ui.js';
 import { findDuplicates, importBookmarks, exportBookmarks, deleteSelectedInGroup, toggleDuplicateItem, loadBulkDeleteItems, toggleBulkItem, selectAllBulkItems, deselectAllBulkItems, deleteBulkItems } from './tools.js';
 import { copyUrl } from './utils.js';
 
