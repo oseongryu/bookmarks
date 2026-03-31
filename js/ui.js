@@ -24,7 +24,10 @@ export function hideEditModal() {
     elements.editModal.classList.remove('show');
 }
 
-export function showEditModal(url) {
+export function showEditModal(urlData) {
+    // If urlData is a string (JSON), parse it first
+    const url = typeof urlData === 'string' ? JSON.parse(urlData) : urlData;
+    
     document.getElementById('editUrlId').value = url.id;
     document.getElementById('editUrlTitle').value = url.title;
     document.getElementById('editUrlCategory').value = url.category || '';

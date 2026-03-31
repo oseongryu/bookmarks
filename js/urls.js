@@ -221,7 +221,13 @@ export async function fetchAndUpdateTitle(id, url) {
 
 // ===== Render Functions =====
 export function renderUrls(urls) {
-    elements.urlList.innerHTML = urls.map(url => `
+    elements.urlList.innerHTML = urls.map(url => {
+        // Properly escape URL for use in JavaScript string
+        const escapedUrl = url.url.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        // Properly escape JSON for HTML attribute
+        const escapedJson = escapeHtml(JSON.stringify(url));
+        
+        return `
         <div class="url-item">
             <div class="url-item-header">
                 <div class="url-item-content">
@@ -235,10 +241,10 @@ export function renderUrls(urls) {
                     </a>
                 </div>
                 <div class="url-item-actions">
-                    <button class="btn-icon copy" onclick="copyUrl('${escapeHtml(url.url)}')" title="복사">
+                    <button class="btn-icon copy" onclick="copyUrl('${escapedUrl}')" title="복사">
                         <i class="bi bi-clipboard"></i>
                     </button>
-                    <button class="btn-icon edit" onclick="showEditModal(${JSON.stringify(url).replace(/"/g, '&quot;')})" title="수정">
+                    <button class="btn-icon edit" onclick="showEditModal('${escapedJson}')" title="수정">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn-icon delete" onclick="deleteUrl('${url.id}')" title="삭제">
@@ -247,5 +253,6 @@ export function renderUrls(urls) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
