@@ -101,7 +101,11 @@ export async function addUrl() {
     const rawUrlInput = document.getElementById('urlAddress').value.trim();
 
     // Split by newlines and filter empty lines
-    const urls = rawUrlInput.split(/[\n\r]+/).map(u => u.trim()).filter(u => u.length > 0);
+    // Also remove any whitespace/newlines within each URL (for copy-paste with line breaks)
+    const urls = rawUrlInput
+        .split(/[\n\r]+/)
+        .map(u => u.replace(/[\r\n\s]/g, ''))  // Remove all whitespace including newlines
+        .filter(u => u.length > 0);
 
     if (urls.length === 0) {
         showToast('URL을 입력해주세요.', 'error');
@@ -185,7 +189,8 @@ export async function updateUrl(e) {
 
     const id = document.getElementById('editUrlId').value;
     const title = document.getElementById('editUrlTitle').value.trim();
-    const url = document.getElementById('editUrlAddress').value.trim();
+    const url = document.getElementById('editUrlAddress').value
+        .replace(/[\r\n\s]/g, '');  // Remove all whitespace including newlines
 
     // Validate URL before updating
     const validation = isValidUrl(url);
