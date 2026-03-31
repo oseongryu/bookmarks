@@ -221,13 +221,7 @@ export async function fetchAndUpdateTitle(id, url) {
 
 // ===== Render Functions =====
 export function renderUrls(urls) {
-    elements.urlList.innerHTML = urls.map(url => {
-        // Properly escape URL for use in JavaScript string
-        const escapedUrl = url.url.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        // Properly escape JSON for HTML attribute
-        const escapedJson = escapeHtml(JSON.stringify(url));
-        
-        return `
+    elements.urlList.innerHTML = urls.map(url => `
         <div class="url-item">
             <div class="url-item-header">
                 <div class="url-item-content">
@@ -241,18 +235,52 @@ export function renderUrls(urls) {
                     </a>
                 </div>
                 <div class="url-item-actions">
-                    <button class="btn-icon copy" onclick="copyUrl('${escapedUrl}')" title="복사">
+                    <button class="btn-icon copy" data-url="${escapeHtml(url.url)}" data-action="copy" title="복사">
                         <i class="bi bi-clipboard"></i>
                     </button>
-                    <button class="btn-icon edit" onclick="showEditModal('${escapedJson}')" title="수정">
+                    <button class="btn-icon edit" data-url-id="${url.id}" data-action="edit" title="수정">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn-icon delete" onclick="deleteUrl('${url.id}')" title="삭제">
+                    <button class="btn-icon delete" data-url-id="${url.id}" data-action="delete" title="삭제">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
             </div>
         </div>
-    `;
-    }).join('');
+    `).join('');
+
+    // Attach event listeners to buttons
+    attachUrlEventListeners(urls);
+}
+
+// Attach event listeners to URL action buttons
+function attachUrlEventListeners(urls) {
+    // Create a map for quick lookup
+    const urlMap = new Map(urls.map(url => [url.id, url]));
+
+    // Get all action buttons
+    const buttons = elements.urlList.querySelectorAll('[data-action]');
+
+    buttons.forEach(button => {
+        const action = button.getAttribute('data-action');
+
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (action === 'copy') {
+                const url = button.getAttribute('data-url');
+                window.copyUrl(url);
+            } else if (action === 'edit') {
+                const urlId = button.getAttribute('data-url-id');
+                const urlData = urlMap.get(urlId);
+                if (urlData) {
+                    showEditModal(urlData);
+                }
+            } else if (action === 'delete') {
+                const urlId = button.getAttribute('data-url-id');
+                window.deleteUrl(urlId);
+            }
+        });
+    });
 }
