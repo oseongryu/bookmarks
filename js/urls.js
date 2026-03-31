@@ -71,6 +71,31 @@ export async function fetchUrls() {
     }
 }
 
+// Validate URL for security
+function isValidUrl(url) {
+    // Block dangerous URL schemes
+    const dangerousSchemes = ['javascript:', 'data:', 'vbscript:', 'file:'];
+    const lowerUrl = url.toLowerCase().trim();
+    
+    for (const scheme of dangerousSchemes) {
+        if (lowerUrl.startsWith(scheme)) {
+            return { valid: false, reason: `'${scheme}' URL은 보안상 저장할 수 없습니다.` };
+        }
+    }
+    
+    // Check for basic URL structure
+    try {
+        const urlObj = new URL(url);
+        // Only allow http, https, ftp schemes
+        if (!['http:', 'https:', 'ftp:'].includes(urlObj.protocol)) {
+            return { valid: false, reason: 'http, https, ftp URL만 저장할 수 있습니다.' };
+        }
+        return { valid: true };
+    } catch (e) {
+        return { valid: false, reason: '올바른 URL 형식이 아닙니다.' };
+    }
+}
+
 export async function addUrl() {
     const titleInput = document.getElementById('urlTitle').value.trim();
     const rawUrlInput = document.getElementById('urlAddress').value.trim();
@@ -81,6 +106,15 @@ export async function addUrl() {
     if (urls.length === 0) {
         showToast('URL을 입력해주세요.', 'error');
         return;
+    }
+
+    // Validate all URLs before processing
+    for (const url of urls) {
+        const validation = isValidUrl(url);
+        if (!validation.valid) {
+            showToast(`URL 검증 실패: ${validation.reason}`, 'error');
+            return;
+        }
     }
 
     try {
@@ -152,6 +186,13 @@ export async function updateUrl(e) {
     const id = document.getElementById('editUrlId').value;
     const title = document.getElementById('editUrlTitle').value.trim();
     const url = document.getElementById('editUrlAddress').value.trim();
+
+    // Validate URL before updating
+    const validation = isValidUrl(url);
+    if (!validation.valid) {
+        showToast(`URL 검증 실패: ${validation.reason}`, 'error');
+        return;
+    }
 
     const urlData = {
         title: title || url, // Use URL as title if title is empty
