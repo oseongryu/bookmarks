@@ -101,15 +101,23 @@ export async function addUrl() {
     const rawUrlInput = document.getElementById('urlAddress').value.trim();
 
     // Split by newlines and filter empty lines
-    // Also remove any whitespace/newlines within each URL (for copy-paste with line breaks)
+    // Remove only newlines/carriage returns, preserve intentional spaces
     const urls = rawUrlInput
         .split(/[\n\r]+/)
-        .map(u => u.replace(/[\r\n\s]/g, ''))  // Remove all whitespace including newlines
+        .map(u => u.replace(/[\r\n]/g, '').trim())  // Remove only line breaks, trim edges
         .filter(u => u.length > 0);
 
     if (urls.length === 0) {
         showToast('URL을 입력해주세요.', 'error');
         return;
+    }
+
+    // Check for spaces in URLs and warn user
+    for (const url of urls) {
+        if (url.includes(' ')) {
+            showToast('URL에 공백이 포함되어 있습니다. 공백은 %20으로 인코딩되어야 합니다.', 'error');
+            return;
+        }
     }
 
     // Validate all URLs before processing
@@ -190,7 +198,14 @@ export async function updateUrl(e) {
     const id = document.getElementById('editUrlId').value;
     const title = document.getElementById('editUrlTitle').value.trim();
     const url = document.getElementById('editUrlAddress').value
-        .replace(/[\r\n\s]/g, '');  // Remove all whitespace including newlines
+        .replace(/[\r\n]/g, '')  // Remove only line breaks
+        .trim();  // Trim edges
+
+    // Check for spaces in URL
+    if (url.includes(' ')) {
+        showToast('URL에 공백이 포함되어 있습니다. 공백은 %20으로 인코딩되어야 합니다.', 'error');
+        return;
+    }
 
     // Validate URL before updating
     const validation = isValidUrl(url);
