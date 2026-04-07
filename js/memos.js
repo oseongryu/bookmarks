@@ -189,6 +189,9 @@ export function renderMemos(memos) {
                     </span>
                 </div>
                 <div class="url-item-actions">
+                    <button class="btn-icon copy" onclick="copyMemoContent('${memo.id}')" title="복사">
+                        <i class="bi bi-copy"></i>
+                    </button>
                     <button class="btn-icon edit" onclick="showEditMemoModal(${JSON.stringify(memo).replace(/"/g, "&quot;")})" title="수정">
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -201,6 +204,29 @@ export function renderMemos(memos) {
     `,
         )
         .join("");
+}
+
+export async function copyMemoContent(id) {
+    const contentEl = document.getElementById(`memo-content-${id}`);
+    const text = contentEl.innerText;
+    try {
+        await navigator.clipboard.writeText(text);
+        showToast('메모가 복사되었습니다!', 'success');
+    } catch (error) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast('메모가 복사되었습니다!', 'success');
+        } catch (err) {
+            showToast('복사에 실패했습니다.', 'error');
+        }
+        document.body.removeChild(textArea);
+    }
 }
 
 export function toggleMemoContent(id) {
