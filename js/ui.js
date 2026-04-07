@@ -76,6 +76,14 @@ export function hideBulkDeleteModal() {
     elements.bulkDeleteModal.classList.remove('show');
 }
 
+export function showBulkDeleteMemoModal() {
+    elements.bulkDeleteMemoModal.classList.add('show');
+}
+
+export function hideBulkDeleteMemoModal() {
+    elements.bulkDeleteMemoModal.classList.remove('show');
+}
+
 // ===== Menu Functions =====
 export function toggleUserMenu(e) {
     e.stopPropagation();

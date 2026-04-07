@@ -93,6 +93,18 @@ export const elements = {
     selectedCount: document.getElementById('selectedCount'),
     deleteBulkBtn: document.getElementById('deleteBulkBtn'),
 
+    // Memo Bulk Delete Modal Elements
+    bulkDeleteMemoModal: document.getElementById('bulkDeleteMemoModal'),
+    bulkDeleteMemoLoading: document.getElementById('bulkDeleteMemoLoading'),
+    bulkDeleteMemoContent: document.getElementById('bulkDeleteMemoContent'),
+    bulkDeleteMemoGrid: document.getElementById('bulkDeleteMemoGrid'),
+    noBulkMemoItems: document.getElementById('noBulkMemoItems'),
+    selectAllMemoBtn: document.getElementById('selectAllMemoBtn'),
+    deselectAllMemoBtn: document.getElementById('deselectAllMemoBtn'),
+    selectedMemoCount: document.getElementById('selectedMemoCount'),
+    deleteBulkMemoBtn: document.getElementById('deleteBulkMemoBtn'),
+    bulkDeleteMemoBtn: document.getElementById('bulkDeleteMemoBtn'),
+
     // User Menu
     userMenuBtn: document.getElementById('userMenuBtn'),
     userDropdown: document.getElementById('userDropdown'),

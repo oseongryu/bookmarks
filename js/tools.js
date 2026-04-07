@@ -1,6 +1,7 @@
 import { state, elements } from './state.js';
 import { supabase } from './supabaseClient.js';
-import { showToast, hideDuplicateModal, hideImportModal, hideBulkDeleteModal, showDuplicateModal, showBulkDeleteModal } from './ui.js';
+import { showToast, hideDuplicateModal, hideImportModal, hideBulkDeleteModal, showDuplicateModal, showBulkDeleteModal, hideBulkDeleteMemoModal } from './ui.js';
+import { loadMemos } from './memos.js';
 import { loadUrls } from './urls.js';
 import { escapeHtml } from './utils.js';
 
@@ -570,6 +571,118 @@ export async function deleteBulkItems() {
         
     } catch (error) {
         console.error('Bulk delete error:', error);
+        showToast('삭제 중 오류가 발생했습니다.', 'error');
+    }
+}
+
+// ===== Memo Bulk Delete Functions =====
+let bulkDeleteMemoItems = [];
+
+export async function loadBulkDeleteMemos() {
+    try {
+        elements.bulkDeleteMemoLoading.classList.remove('d-none');
+        elements.bulkDeleteMemoContent.classList.add('d-none');
+
+        const { data, error } = await supabase
+            .from('memos')
+            .select('*')
+            .eq('access_key', state.currentAccessKey)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        bulkDeleteMemoItems = data.map(item => ({...item, selected: false}));
+        renderBulkDeleteMemoGrid();
+
+        elements.bulkDeleteMemoLoading.classList.add('d-none');
+        elements.bulkDeleteMemoContent.classList.remove('d-none');
+    } catch (error) {
+        console.error('Load bulk memo items error:', error);
+        showToast('데이터를 불러오는 중 오류가 발생했습니다.', 'error');
+    }
+}
+
+function renderBulkDeleteMemoGrid() {
+    elements.bulkDeleteMemoGrid.innerHTML = '';
+
+    if (bulkDeleteMemoItems.length === 0) {
+        elements.noBulkMemoItems.classList.remove('d-none');
+        elements.selectAllMemoBtn.disabled = true;
+        elements.deselectAllMemoBtn.disabled = true;
+        return;
+    }
+
+    elements.noBulkMemoItems.classList.add('d-none');
+    elements.selectAllMemoBtn.disabled = false;
+    elements.deselectAllMemoBtn.disabled = false;
+
+    bulkDeleteMemoItems.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = `bulk-item ${item.selected ? 'selected' : ''}`;
+        itemEl.onclick = () => toggleBulkMemo(item.id);
+
+        itemEl.innerHTML = `
+            <div class="bulk-item-check">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <div class="bulk-item-title">${escapeHtml(item.title)}</div>
+            <div class="bulk-item-url">${escapeHtml(item.content || '')}</div>
+        `;
+
+        elements.bulkDeleteMemoGrid.appendChild(itemEl);
+    });
+
+    updateBulkDeleteMemoCount();
+}
+
+export function toggleBulkMemo(id) {
+    const item = bulkDeleteMemoItems.find(i => i.id === id);
+    if (item) {
+        item.selected = !item.selected;
+        renderBulkDeleteMemoGrid();
+    }
+}
+
+export function selectAllBulkMemos() {
+    bulkDeleteMemoItems.forEach(item => item.selected = true);
+    renderBulkDeleteMemoGrid();
+}
+
+export function deselectAllBulkMemos() {
+    bulkDeleteMemoItems.forEach(item => item.selected = false);
+    renderBulkDeleteMemoGrid();
+}
+
+function updateBulkDeleteMemoCount() {
+    const count = bulkDeleteMemoItems.filter(i => i.selected).length;
+    elements.selectedMemoCount.textContent = count;
+    elements.deleteBulkMemoBtn.disabled = count === 0;
+}
+
+export async function deleteBulkMemos() {
+    const selectedIds = bulkDeleteMemoItems.filter(i => i.selected).map(i => i.id);
+
+    if (selectedIds.length === 0) return;
+
+    if (!confirm(`선택한 ${selectedIds.length}개의 메모를 삭제하시겠습니까?`)) return;
+
+    try {
+        const { error } = await supabase
+            .from('memos')
+            .delete()
+            .in('id', selectedIds);
+
+        if (error) throw error;
+
+        showToast(`${selectedIds.length}개의 메모가 삭제되었습니다.`, 'success');
+
+        bulkDeleteMemoItems = bulkDeleteMemoItems.filter(i => !i.selected);
+        renderBulkDeleteMemoGrid();
+
+        await loadMemos();
+
+    } catch (error) {
+        console.error('Bulk memo delete error:', error);
         showToast('삭제 중 오류가 발생했습니다.', 'error');
     }
 }

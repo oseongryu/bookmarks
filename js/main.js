@@ -2,8 +2,8 @@ import { state, elements } from './state.js';
 import { checkAuth, handleLogin, handleLogout } from './auth.js';
 import { loadUrls, addUrl, updateUrl, deleteUrl, fetchUrls } from './urls.js';
 import { loadMemos, addMemo, updateMemo, deleteMemo, fetchMemos, toggleMemoContent, copyMemoContent } from './memos.js';
-import { showToast, showEditModal, showEditMemoModal, hideEditModal, hideMemoModal, hideDuplicateModal, hideImportModal, hideBulkDeleteModal, showDuplicateModal, showImportModal, showBulkDeleteModal, toggleUserMenu, closeUserMenu, toggleToolsMenu, closeToolsMenu, updateAccessKeyDisplay, showLoginModal, hideLoginModal } from './ui.js';
-import { findDuplicates, importBookmarks, exportBookmarks, deleteSelectedInGroup, toggleDuplicateItem, loadBulkDeleteItems, toggleBulkItem, selectAllBulkItems, deselectAllBulkItems, deleteBulkItems } from './tools.js';
+import { showToast, showEditModal, showEditMemoModal, hideEditModal, hideMemoModal, hideDuplicateModal, hideImportModal, hideBulkDeleteModal, showDuplicateModal, showImportModal, showBulkDeleteModal, showBulkDeleteMemoModal, hideBulkDeleteMemoModal, toggleUserMenu, closeUserMenu, toggleToolsMenu, closeToolsMenu, updateAccessKeyDisplay, showLoginModal, hideLoginModal } from './ui.js';
+import { findDuplicates, importBookmarks, exportBookmarks, deleteSelectedInGroup, toggleDuplicateItem, loadBulkDeleteItems, toggleBulkItem, selectAllBulkItems, deselectAllBulkItems, deleteBulkItems, loadBulkDeleteMemos, toggleBulkMemo, selectAllBulkMemos, deselectAllBulkMemos, deleteBulkMemos } from './tools.js';
 import { copyUrl } from './utils.js';
 
 // ===== Initialization =====
@@ -79,10 +79,18 @@ function setupEventListeners() {
         showBulkDeleteModal();
         loadBulkDeleteItems();
     });
+    elements.bulkDeleteMemoBtn.addEventListener('click', () => {
+        closeToolsMenu();
+        showBulkDeleteMemoModal();
+        loadBulkDeleteMemos();
+    });
     elements.importForm.addEventListener('submit', importBookmarks);
     elements.selectAllBtn.addEventListener('click', selectAllBulkItems);
     elements.deselectAllBtn.addEventListener('click', deselectAllBulkItems);
     elements.deleteBulkBtn.addEventListener('click', deleteBulkItems);
+    elements.selectAllMemoBtn.addEventListener('click', selectAllBulkMemos);
+    elements.deselectAllMemoBtn.addEventListener('click', deselectAllBulkMemos);
+    elements.deleteBulkMemoBtn.addEventListener('click', deleteBulkMemos);
 
     // Toggle optional fields
     elements.toggleOptions.addEventListener('click', () => {
@@ -164,6 +172,10 @@ function setupEventListeners() {
 
     document.querySelectorAll('[data-dismiss="bulk-delete-modal"]').forEach(btn => {
         btn.addEventListener('click', hideBulkDeleteModal);
+    });
+
+    document.querySelectorAll('[data-dismiss="bulk-delete-memo-modal"]').forEach(btn => {
+        btn.addEventListener('click', hideBulkDeleteMemoModal);
     });
 
     document.querySelectorAll('[data-dismiss="memo-modal"]').forEach(btn => {
@@ -256,6 +268,7 @@ window.copyUrl = copyUrl;
 window.toggleDuplicateItem = toggleDuplicateItem;
 window.deleteSelectedInGroup = deleteSelectedInGroup;
 window.toggleBulkItem = toggleBulkItem;
+window.toggleBulkMemo = toggleBulkMemo;
 window.deleteMemo = deleteMemo;
 window.showEditMemoModal = showEditMemoModal;
 window.toggleMemoContent = toggleMemoContent;
