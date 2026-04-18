@@ -87,29 +87,90 @@
                     </div>
                 </div>
 
-                <div class="stats-section">
-                    <h3 class="stats-section-title">
-                        <i class="bi bi-bar-chart-fill"></i>
-                        일자별 이벤트 수
-                    </h3>
-                    <div id="dailyChart" class="stats-chart"></div>
+                <div class="stats-tabs" role="tablist">
+                    <button type="button" class="stats-tab active" data-view="daily">
+                        <i class="bi bi-calendar3"></i>
+                        <span>일자 × 타입</span>
+                    </button>
+                    <button type="button" class="stats-tab" data-view="hourly">
+                        <i class="bi bi-clock-history"></i>
+                        <span>시간 히트맵</span>
+                    </button>
+                    <button type="button" class="stats-tab" data-view="bySite">
+                        <i class="bi bi-globe"></i>
+                        <span>사이트별</span>
+                    </button>
                 </div>
 
-                <div class="stats-section">
-                    <h3 class="stats-section-title">
-                        <i class="bi bi-table"></i>
-                        상세 데이터
-                    </h3>
-                    <div class="stats-table-wrap">
-                        <table class="stats-table" id="dailyTable">
-                            <thead>
-                                <tr>
-                                    <th>날짜</th>
-                                    <th>총 이벤트</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                <div class="stats-view" id="view-daily">
+                    <div class="stats-section">
+                        <h3 class="stats-section-title">
+                            <i class="bi bi-bar-chart-fill"></i>
+                            일자별 이벤트 수
+                        </h3>
+                        <div id="dailyChart" class="stats-chart"></div>
+                    </div>
+
+                    <div class="stats-section">
+                        <h3 class="stats-section-title">
+                            <i class="bi bi-table"></i>
+                            상세 데이터
+                        </h3>
+                        <div class="stats-table-wrap">
+                            <table class="stats-table" id="dailyTable">
+                                <thead>
+                                    <tr>
+                                        <th>날짜</th>
+                                        <th>총 이벤트</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-view d-none" id="view-hourly">
+                    <div class="stats-section">
+                        <h3 class="stats-section-title">
+                            <i class="bi bi-clock-history"></i>
+                            시간대별 히트맵
+                        </h3>
+                        <div class="stats-heatmap-wrap">
+                            <table class="stats-heatmap" id="hourlyHeatmap">
+                                <thead></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="stats-heatmap-legend">
+                            <span>적음</span>
+                            <span class="legend-cell" data-level="0"></span>
+                            <span class="legend-cell" data-level="1"></span>
+                            <span class="legend-cell" data-level="2"></span>
+                            <span class="legend-cell" data-level="3"></span>
+                            <span class="legend-cell" data-level="4"></span>
+                            <span>많음</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-view d-none" id="view-bySite">
+                    <div class="stats-section">
+                        <h3 class="stats-section-title">
+                            <i class="bi bi-globe"></i>
+                            사이트별 일자 매트릭스
+                        </h3>
+                        <div class="stats-table-wrap">
+                            <table class="stats-table" id="siteTable">
+                                <thead>
+                                    <tr>
+                                        <th>사이트</th>
+                                        <th>합계</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
