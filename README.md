@@ -27,20 +27,11 @@
 
 ### 2. 데이터베이스 테이블 생성
 
-#### 새로 설치하는 경우:
-
-Supabase 대시보드의 **SQL Editor**에서 `schema.sql` 파일의 내용을 실행합니다.
-
-#### 기존 데이터가 있는 경우 (마이그레이션):
-
-Supabase 대시보드의 **SQL Editor**에서 `migration.sql` 파일의 내용을 실행합니다.
-
-- 기존 모든 URL은 `default` 액세스 키로 마이그레이션됩니다
-- `default` 키로 로그인하면 기존 데이터를 볼 수 있습니다
+Supabase 대시보드의 **SQL Editor**에서 `static/sql/schema.sql` 파일의 내용을 실행합니다.
 
 ### 3. 설정 파일 수정
 
-`config.js` 파일을 열고 Supabase 정보를 입력합니다:
+`static/js/config.js` 파일을 열고 Supabase 정보를 입력합니다:
 
 ```javascript
 const SUPABASE_CONFIG = {
@@ -96,11 +87,13 @@ npx serve
 ```
 url-manager/
 ├── index.html      # 메인 HTML 파일
-├── style.css       # 스타일시트
-├── app.js          # 애플리케이션 로직
-├── config.js       # Supabase 설정
-├── schema.sql      # 데이터베이스 스키마 (새 설치용)
-├── migration.sql   # 데이터베이스 마이그레이션 (기존 데이터용)
+├── stats.html      # 페이지 이벤트 통계
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/         # 애플리케이션 로직 (config.js 포함)
+│   └── sql/
+│       └── schema.sql  # 데이터베이스 스키마
 └── README.md       # 프로젝트 문서
 ```
 

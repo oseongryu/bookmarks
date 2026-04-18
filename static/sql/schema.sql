@@ -55,3 +55,19 @@ CREATE TRIGGER update_memos_updated_at
     BEFORE UPDATE ON memos
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+-- 페이지 이벤트 트래킹 테이블 (랜딩페이지 방문/클릭 추적)
+CREATE TABLE page_events (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    site TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    referrer TEXT,
+    user_agent TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX page_events_site_idx ON page_events(site);
+CREATE INDEX page_events_event_type_idx ON page_events(event_type);
+CREATE INDEX page_events_created_at_idx ON page_events(created_at DESC);
+
+ALTER TABLE page_events DISABLE ROW LEVEL SECURITY;
