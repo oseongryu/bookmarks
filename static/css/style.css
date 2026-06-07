@@ -1620,6 +1620,28 @@ body:not(.edit-mode) .btn-icon.delete {
   margin-top: 4px;
 }
 
+.range-presets {
+  display: flex;
+  gap: 6px;
+}
+
+.range-preset {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--border-color, #ddd);
+  background: var(--bg-secondary, #fff);
+  color: var(--text-secondary, #555);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.range-preset.active {
+  background: var(--primary-color, #4a6cf7);
+  border-color: var(--primary-color, #4a6cf7);
+  color: #fff;
+}
+
 .stats-summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

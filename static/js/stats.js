@@ -48,12 +48,16 @@ function formatDateKey(isoString) {
     return toDateInput(new Date(isoString));
 }
 
-function initDefaultDates() {
+function applyRange(days) {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - 29);
+    start.setDate(start.getDate() - (days - 1));
     els.startDate.value = toDateInput(start);
     els.endDate.value = toDateInput(end);
+}
+
+function initDefaultDates() {
+    applyRange(1);
 }
 
 async function populateFilterOptions() {
@@ -303,8 +307,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDefaultDates();
     await populateFilterOptions();
     els.applyBtn.addEventListener('click', loadStats);
+    for (const btn of document.querySelectorAll('.range-preset')) {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.range-preset').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyRange(Number(btn.dataset.range));
+        });
+    }
     for (const tab of els.tabs) {
         tab.addEventListener('click', () => switchView(tab.dataset.view));
     }
-    loadStats();
 });
