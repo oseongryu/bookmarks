@@ -793,12 +793,6 @@ textarea.form-input {
   color: var(--danger);
 }
 
-/* Hide edit/delete buttons when edit mode is inactive */
-body:not(.edit-mode) .btn-icon.edit,
-body:not(.edit-mode) .btn-icon.delete {
-  display: none;
-}
-
 /* ===== Memo-specific Styles ===== */
 .memo-item-content-text {
   color: var(--text);
@@ -1573,6 +1567,21 @@ body:not(.edit-mode) .btn-icon.delete {
 
   .filter-checkbox span {
     max-width: 40px;
+  }
+
+  /* 모바일: 액션 버튼 작게, 제목 오른쪽에 가로 배치 */
+  .url-item-actions {
+    flex-direction: row;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .btn-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    border-width: 1px;
+    border-radius: 6px;
   }
 }
 

@@ -21,7 +21,6 @@ export const elements = {
     // Toggle
     toggleOptions: document.getElementById('toggleOptions'),
     optionalFields: document.getElementById('optionalFields'),
-    editModeToggle: document.getElementById('editModeToggle'),
 
     // URL List
     urlList: document.getElementById('urlList'),

@@ -14,13 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         elements.autoFetchTitleToggle.checked = autoFetchTitle === 'true';
     }
 
-    // Restore edit mode toggle state
-    const editMode = localStorage.getItem('editMode');
-    if (editMode === 'true') {
-        elements.editModeToggle.checked = true;
-        document.body.classList.add('edit-mode');
-    }
-
     if (checkAuth()) {
         updateAccessKeyDisplay(state.currentAccessKey);
         setupEventListeners();
@@ -102,16 +95,6 @@ function setupEventListeners() {
     elements.toggleOptions.addEventListener('click', () => {
         elements.toggleOptions.classList.toggle('active');
         elements.optionalFields.classList.toggle('show');
-    });
-
-    // Toggle edit mode
-    elements.editModeToggle.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            document.body.classList.add('edit-mode');
-        } else {
-            document.body.classList.remove('edit-mode');
-        }
-        localStorage.setItem('editMode', e.target.checked);
     });
 
     // Auto fetch title toggle
