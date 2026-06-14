@@ -23,8 +23,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (checkAuth()) {
         updateAccessKeyDisplay(state.currentAccessKey);
-        await loadUrls(); // Default mode is URL
         setupEventListeners();
+        // 저장된 모드 복원
+        const savedMode = localStorage.getItem('currentMode');
+        if (savedMode === 'memo') {
+            switchMode('memo');
+        } else {
+            await loadUrls();
+        }
     } else {
         showLoginModal();
         setupEventListeners();
@@ -191,19 +197,16 @@ function switchMode(mode) {
     state.currentPage = 1;
     state.searchQuery = '';
     elements.searchInput.value = '';
+    localStorage.setItem('currentMode', mode);
     
     // Update mode buttons
     if (mode === 'url') {
         elements.urlModeBtn.classList.add('active');
         elements.memoModeBtn.classList.remove('active');
-        elements.appIcon.className = 'bi bi-link-45deg';
-        elements.appTitle.textContent = 'URL Manager';
         elements.addButtonText.textContent = 'URL 추가';
     } else {
         elements.memoModeBtn.classList.add('active');
         elements.urlModeBtn.classList.remove('active');
-        elements.appIcon.className = 'bi bi-sticky';
-        elements.appTitle.textContent = 'Memo Manager';
         elements.addButtonText.textContent = '메모 추가';
     }
     

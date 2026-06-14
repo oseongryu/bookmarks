@@ -47,7 +47,7 @@ body {
 /* ===== Header ===== */
 .app-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 16px 0;
+  padding: 8px 0;
   box-shadow: var(--shadow);
   position: sticky;
   top: 0;
@@ -92,7 +92,7 @@ body {
 .header-center {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   flex: 1;
 }
 
@@ -1552,11 +1552,7 @@ body:not(.edit-mode) .btn-icon.delete {
   }
 
   .app-header {
-    padding: 20px 0;
-  }
-
-  .app-title {
-    font-size: 24px;
+    padding: 10px 0;
   }
 
   .quick-add-card {
@@ -1583,16 +1579,6 @@ body:not(.edit-mode) .btn-icon.delete {
 @media (max-width: 480px) {
   .filter-checkbox span {
     max-width: 20px;
-  }
-
-  .header-content {
-    flex-wrap: wrap;
-  }
-
-  .header-center {
-    order: 3;
-    width: 100%;
-    margin-top: 8px;
   }
 
   .mode-btn span {

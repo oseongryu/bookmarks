@@ -181,9 +181,7 @@ export function renderMemos(memos) {
                         <i class="bi bi-sticky-fill"></i>
                         ${escapeHtml(memo.title)}
                     </div>
-                    <div class="memo-item-content-text collapsed" id="memo-content-${memo.id}">
-                        ${escapeHtml(memo.content)}
-                    </div>
+                    <div class="memo-item-content-text collapsed" id="memo-content-${memo.id}">${escapeHtml(memo.content)}</div>
                     <span class="memo-item-expand" onclick="toggleMemoContent('${memo.id}')">
                         더 보기
                     </span>
@@ -208,7 +206,7 @@ export function renderMemos(memos) {
 
 export async function copyMemoContent(id) {
     const contentEl = document.getElementById(`memo-content-${id}`);
-    const text = contentEl.innerText;
+    const text = contentEl.innerText.trim();
     try {
         await navigator.clipboard.writeText(text);
         showToast('메모가 복사되었습니다!', 'success');

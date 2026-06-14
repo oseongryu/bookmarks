@@ -54,8 +54,6 @@ export const elements = {
     // Mode Toggle
     urlModeBtn: document.getElementById('urlModeBtn'),
     memoModeBtn: document.getElementById('memoModeBtn'),
-    appIcon: document.getElementById('appIcon'),
-    appTitle: document.getElementById('appTitle'),
     addButtonText: document.getElementById('addButtonText'),
 
     // Memo Form Elements
