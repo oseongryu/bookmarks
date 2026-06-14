@@ -2,7 +2,7 @@ import { state, elements } from './state.js';
 import { checkAuth, handleLogin, handleLogout } from './auth.js';
 import { loadUrls, addUrl, updateUrl, deleteUrl, fetchUrls } from './urls.js';
 import { loadMemos, addMemo, updateMemo, deleteMemo, fetchMemos, toggleMemoContent, copyMemoContent } from './memos.js';
-import { showToast, showEditModal, showEditMemoModal, hideEditModal, hideMemoModal, hideDuplicateModal, hideImportModal, hideBulkDeleteModal, showDuplicateModal, showImportModal, showBulkDeleteModal, showBulkDeleteMemoModal, hideBulkDeleteMemoModal, toggleUserMenu, closeUserMenu, toggleToolsMenu, closeToolsMenu, updateAccessKeyDisplay, showLoginModal, hideLoginModal } from './ui.js';
+import { showToast, showEditModal, showEditMemoModal, hideEditModal, hideMemoModal, hideDuplicateModal, hideImportModal, hideBulkDeleteModal, showDuplicateModal, showImportModal, showBulkDeleteModal, showBulkDeleteMemoModal, hideBulkDeleteMemoModal, toggleToolsMenu, closeToolsMenu, updateAccessKeyDisplay, showLoginModal, hideLoginModal } from './ui.js';
 import { findDuplicates, importBookmarks, exportBookmarks, deleteSelectedInGroup, toggleDuplicateItem, loadBulkDeleteItems, toggleBulkItem, selectAllBulkItems, deselectAllBulkItems, deleteBulkItems, loadBulkDeleteMemos, toggleBulkMemo, selectAllBulkMemos, deselectAllBulkMemos, deleteBulkMemos } from './tools.js';
 import { copyUrl } from './utils.js';
 
@@ -42,17 +42,11 @@ function setupEventListeners() {
     elements.urlModeBtn.addEventListener('click', () => switchMode('url'));
     elements.memoModeBtn.addEventListener('click', () => switchMode('memo'));
 
-    // User Menu
-    elements.userMenuBtn.addEventListener('click', toggleUserMenu);
-
     // Tools Menu
     elements.toolsMenuBtn.addEventListener('click', toggleToolsMenu);
 
-    // Close dropdowns when clicking outside
+    // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-        if (!elements.userMenuBtn.contains(e.target) && !elements.userDropdown.contains(e.target)) {
-            closeUserMenu();
-        }
         if (!elements.toolsMenuBtn.contains(e.target) && !elements.toolsDropdown.contains(e.target)) {
             closeToolsMenu();
         }

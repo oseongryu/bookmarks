@@ -1,5 +1,5 @@
 import { state, elements, AUTH_STORAGE_KEY } from './state.js';
-import { updateAccessKeyDisplay, hideLoginModal, showLoginModal, showToast, closeUserMenu } from './ui.js';
+import { updateAccessKeyDisplay, hideLoginModal, showLoginModal, showToast, closeToolsMenu } from './ui.js';
 import { loadUrls } from './urls.js';
 import { loadMemos } from './memos.js';
 
@@ -40,7 +40,7 @@ export function handleLogout() {
     if (confirm('로그아웃 하시겠습니까?')) {
         state.currentAccessKey = null;
         localStorage.removeItem(AUTH_STORAGE_KEY);
-        closeUserMenu();
+        closeToolsMenu();
         showLoginModal();
         showToast('로그아웃 되었습니다.', 'success');
         

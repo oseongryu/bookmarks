@@ -341,6 +341,16 @@ body {
   transform: scale(0.98);
 }
 
+.tools-dropdown-key {
+  padding: 12px 16px;
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg);
+  word-break: break-all;
+}
+
 /* ===== Tools Dropdown Toggles ===== */
 .tools-dropdown-toggle {
   padding: 12px 16px;
@@ -480,6 +490,51 @@ textarea.form-input {
   transform: rotate(180deg);
 }
 
+/* 헤더 추가 옵션 버튼 */
+.btn-toggle-options-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+}
+
+.btn-toggle-options-header i {
+  font-size: 16px;
+  transition: transform 0.2s;
+}
+
+.btn-toggle-options-header.active i {
+  transform: rotate(180deg);
+}
+
+.btn-toggle-options-header:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.btn-toggle-options-header:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 480px) {
+  .btn-toggle-options-header span {
+    display: none;
+  }
+
+  .btn-toggle-options-header {
+    padding: 8px 10px;
+  }
+}
+
 .optional-fields {
   max-height: 0;
   overflow: hidden;
@@ -515,6 +570,46 @@ textarea.form-input {
 
 .btn-add i {
   font-size: 18px;
+}
+
+/* 헤더 추가 버튼 */
+.btn-add-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 8px;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-add-header i {
+  font-size: 16px;
+}
+
+.btn-add-header:hover {
+  background: white;
+}
+
+.btn-add-header:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 480px) {
+  .btn-add-header span {
+    display: none;
+  }
+
+  .btn-add-header {
+    padding: 8px 10px;
+  }
 }
 
 /* ===== Search Bar ===== */

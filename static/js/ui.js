@@ -85,19 +85,6 @@ export function hideBulkDeleteMemoModal() {
 }
 
 // ===== Menu Functions =====
-export function toggleUserMenu(e) {
-    e.stopPropagation();
-    // Close tools menu if open
-    closeToolsMenu();
-    elements.userDropdown.classList.toggle('show');
-    elements.userMenuBtn.classList.toggle('active');
-}
-
-export function closeUserMenu() {
-    elements.userDropdown.classList.remove('show');
-    elements.userMenuBtn.classList.remove('active');
-}
-
 export function updateAccessKeyDisplay(currentAccessKey) {
     if (currentAccessKey) {
         elements.dropdownAccessKey.textContent = currentAccessKey;
@@ -108,8 +95,6 @@ export function updateAccessKeyDisplay(currentAccessKey) {
 
 export function toggleToolsMenu(e) {
     e.stopPropagation();
-    // Close user menu if open
-    closeUserMenu();
     elements.toolsDropdown.classList.toggle('show');
     elements.toolsMenuBtn.classList.toggle('active');
 }

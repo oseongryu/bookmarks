@@ -102,9 +102,7 @@ export const elements = {
     deleteBulkMemoBtn: document.getElementById('deleteBulkMemoBtn'),
     bulkDeleteMemoBtn: document.getElementById('bulkDeleteMemoBtn'),
 
-    // User Menu
-    userMenuBtn: document.getElementById('userMenuBtn'),
-    userDropdown: document.getElementById('userDropdown'),
+    // User
     dropdownAccessKey: document.getElementById('dropdownAccessKey'),
 
     // Tools Menu
